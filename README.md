@@ -2,7 +2,7 @@
 Get values from an OPCUA server  and convert these to a PDF file
 
 ## Run
-The follwing steps are used to run the program with Windows command bash
+The following steps are used to run the program with __**Windows 10**__ command bash
 
 ### Install the lastest python version
 - Install the last version on (Python website)[https://www.python.org/downloads/]
