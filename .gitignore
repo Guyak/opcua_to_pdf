@@ -164,3 +164,5 @@ _config*.json
 !_config*EXAMPLE.json
 *.bak*
 *.cxob
+*.pdf
+!*EXAMPLE.pdf

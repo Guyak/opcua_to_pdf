@@ -18,6 +18,14 @@ py --version
 ```bash
 py -m pip install opcua
 ```
+- For the PDF generator
+```bash
+py -m pip install fpdf
+```
+Update the library via Git repository (needs git installed on the computer)
+```bash
+py -m pip install git+https://github.com/py-pdf/fpdf2.git@master
+```
 
 ### Complete the configuration file
 - Fill the fields of _config_opcuaEXAMPLE.json with needed informations
@@ -26,5 +34,9 @@ py -m pip install opcua
 ### Run the program
 - Run set_opcua.py to try writing/reading values from the server
 ```bash
-py set_opcua.py
+py ./set_opcua.py
+```
+- Run generate_pdf.py to try PDF generation with [FPDF](https://py-pdf.github.io/fpdf2/index.html)
+```bash
+py ./generate_pdf.py
 ```
