@@ -41,11 +41,11 @@ print(f"Connected !")
     # nodeString.set_value(ua.DataValue(ua.Variant(f"Mis à vrai - Date : {time.strftime("%Y-%m-%d_%H-%M-%S")}", ua.VariantType.String)))
 # print(nodeString.get_value())
 
-nodeInt16 = client.get_node(f'ns=2;s=API_425056.Tags.Recette.GEN.Limite_Couple')
-print(f'Limite_Couple à {time.strftime("%Y-%m-%d_%H-%M-%S")} : {nodeInt16.get_value()}')
+nodeInt16 = client.get_node(f'ns=2;s=API_425056.Tags.Recette.GEN.Limite_Couple').get_value()
+print(f'Limite_Couple à {time.strftime("%Y-%m-%d_%H-%M-%S")} : {nodeInt16}')
 
-nodeUInt16 = client.get_node(f'ns=2;s=API_425056.Tags.Recette.VIDE.Tension_Accept_1')
-print(f'Tension_Accept_1 à {time.strftime("%Y-%m-%d_%H-%M-%S")} : {nodeUInt16.get_value()/10}')
+nodeUInt16 = client.get_node(f'ns=2;s=API_425056.Tags.Recette.VIDE.Tension_Accept_1').get_value()
+print(f'Tension_Accept_1 à {time.strftime("%Y-%m-%d_%H-%M-%S")} : {nodeUInt16/10}')
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Disconnecting from the server
