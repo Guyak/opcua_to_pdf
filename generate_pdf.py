@@ -34,6 +34,37 @@ pdf.set_font("helvetica", size=12)
 for i in range(1, 41):
     pdf.cell(0, 10, f"Printing line number {i}", new_x="LMARGIN", new_y="NEXT")
 
+pdf.add_page()
+with pdf.table(text_align="CENTER") as table:
+    row = table.row()
+
+    row = table.row()
+    row.cell("Vitesse entrainement (tr/min)", rowspan=2)
+    row.cell("Tension_moy. (V)", colspan=3)
+
+    row = table.row()
+    row.cell("Min")
+    row.cell("Mesure")
+    row.cell("Max")
+
+    row = table.row()
+    row.cell("1XXXX")
+    row.cell("1MIMI")
+    row.cell("1MEME")
+    row.cell("1MAMA")
+
+    row = table.row()
+    row.cell("2XXXX")
+    row.cell("2MIMI")
+    row.cell("2MEME")
+    row.cell("2MAMA")
+
+    row = table.row()
+    row.cell("3XXXX")
+    row.cell("3MIMI")
+    row.cell("3MEME")
+    row.cell("3MAMA")
+
 # Create report path based on specimen type, date and time
 path = f'./Regiolis Mot/{time.strftime("%Y_%m_%d")}/{time.strftime("%H_%M_%S")}'
 # For debug, easy path
