@@ -164,6 +164,7 @@ _config*.json
 !_config_listes.json
 !_config*EXAMPLE.json
 *.bak*
+*.debug
 *.cxob
 *.pdf
 !*EXAMPLE.pdf
