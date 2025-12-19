@@ -14,6 +14,11 @@ py --version
 ```
 
 ### Install needed libraries
+- General purpose libraries
+```bash
+py -m pip install rich
+```
+
 - For the OPCUA client
 ```bash
 py -m pip install opcua

@@ -161,6 +161,7 @@ cython_debug/
 
 # Personal
 _config*.json
+!_config_listes.json
 !_config*EXAMPLE.json
 *.bak*
 *.cxob
