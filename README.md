@@ -22,6 +22,7 @@ py -m pip install rich
 - For the OPCUA client
 ```bash
 py -m pip install opcua
+py -m pip install cryptography
 ```
 - For the PDF generator
 ```bash
