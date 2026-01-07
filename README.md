@@ -33,16 +33,17 @@ Update the library via Git repository (needs git installed on the computer)
 py -m pip install git+https://github.com/py-pdf/fpdf2.git@master
 ```
 
+Remove a discontinued library to avoid having a warning every time the program starts
+Path : __C:\Users\*username*\AppData\Local\Programs\Python\Python313\Lib\site-packages\fpdf\ttfonts.py__
+
 ### Complete the configuration file
 - Fill the fields of _config_opcuaEXAMPLE.json with needed informations
-- Remove EXAMPLE in the file names to get _config_opcua.json
+- Remove EXAMPLE in the file names to get *_config_opcua.json*
 
 ### Run the program
-- Run set_opcua.py to try writing/reading values from the server
+- Run **main.py** to run the program that will call needed sub-programs to create the different test reports with [FPDF](https://py-pdf.github.io/fpdf2/index.html)
 ```bash
-py ./set_opcua.py
+py ./main.py
 ```
-- Run generate_pdf.py to try PDF generation with [FPDF](https://py-pdf.github.io/fpdf2/index.html)
-```bash
-py ./generate_pdf.py
-```
+- It is also possible to double-click on **run_prog.bat** to start the porgram without entering the terminal
+
