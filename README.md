@@ -33,8 +33,7 @@ Update the library via Git repository (needs git installed on the computer)
 py -m pip install git+https://github.com/py-pdf/fpdf2.git@master
 ```
 
-Remove a discontinued library to avoid having a warning every time the program starts
-
+- Remove a discontinued library to avoid having a warning every time the program starts
 Path : **C:\Users\\*username*\AppData\Local\Programs\Python\Python313\Lib\site-packages\fpdf\ttfonts.py**
 
 ### Complete the configuration file
