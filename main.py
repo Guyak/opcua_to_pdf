@@ -58,9 +58,9 @@ except ConnectionRefusedError:
 printc(f"[green]Connecté !\n")
 
 ##————————————————————————————————————————————————————————————————————————————##
-## Lecture/Ecriture des valeurs du serveur
+## Lecture/Ecriture des valeurs du serveur et génération de rapport
 API_Lecture = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Lecture')
-read_full = False
+read_full = True
 
 print(f"Appuyer sur CTRL-C pour arrêter le programme\n")
 try:
@@ -72,10 +72,10 @@ try:
                 rapport_filtre = rapport_liste
             else:
                 #Lecture uniquement pour l'essai à faire
-                recette_filtre = [item for item in recette_liste if "VIDE" in item]
-                rapport_filtre = [item for item in rapport_liste if "VIDE" in item]
+                recette_filtre = [item for item in recette_liste if ("GEN" in item) or("VIDE" in item) or ("SYNCHRO" in item)]
+                rapport_filtre = [item for item in rapport_liste if ("GEN" in item) or("VIDE" in item) or ("SYNCHRO" in item)]
 
-            # Récupération des valeurs
+            ## Récupération des valeurs
             # Recette
             printc(f'[bright_cyan]Récupération des paramètres de recette...')
             for idx,i in enumerate(recette_filtre, start=1):
@@ -83,38 +83,51 @@ try:
                 setattr(recette, i, client.get_node(f'ns=2;s=API_425056.Tags.Recette.{i}').get_value())
             printc(f'[green]OK   ')
 
-            # Initialisation du fichier PDF
-            pdf = init_pdf("Regio2N", "MJP 250-2", "123456-789")
-
-            # Rapport de test
+            ## Rapport de test
             printc(f'[bright_cyan]Récupération des valeurs de rapport...')
             for idx,i in enumerate(rapport_filtre, start=1):
                 print(f"{idx}/{len(rapport_filtre)}", end="\r")
                 setattr(rapport, i, client.get_node(f'ns=2;s=API_425056.Tags.Rapport.{i}').get_value())
             printc(f'[green]OK   \n')
 
-            # Affichage de valeurs - Essai à vide
-            pdf = print_Vide(pdf,"Regio2N", [recette.VIDE_Vitesse_Entrainement_1, recette.VIDE_Vitesse_Entrainement_2, recette.VIDE_Vitesse_Entrainement_3],
-                                            [recette.VIDE_Tension_Accept_1, recette.VIDE_Tension_Accept_2, recette.VIDE_Tension_Accept_3],
-                                            [rapport.VIDE_Hyst_1, rapport.VIDE_Hyst_2, rapport.VIDE_Hyst_3],
-                                            [rapport.VIDE_Tension_1, rapport.VIDE_Tension_2, rapport.VIDE_Tension_3],
-                                            [True, False, True])
+            ## Initialisation du fichier PDF
+            pdf = init_pdf(rapport.GEN_Type_Specimen, rapport.GEN_Ref_Specimen, rapport.GEN_Symbole_Specimen, rapport.GEN_Num_Serie)
+
+            ## Affichage de valeurs
+            #Essai à vide
+            pdf = print_VIDE(pdf, rapport.GEN_Type_Specimen, [recette.VIDE_Vitesse_Entrainement_1, recette.VIDE_Vitesse_Entrainement_2, recette.VIDE_Vitesse_Entrainement_3],
+                                                            [recette.VIDE_Tension_Accept_1, recette.VIDE_Tension_Accept_2, recette.VIDE_Tension_Accept_3],
+                                                            [rapport.VIDE_Hyst_1, rapport.VIDE_Hyst_2, rapport.VIDE_Hyst_3],
+                                                            [rapport.VIDE_Tension_1, rapport.VIDE_Tension_2, rapport.VIDE_Tension_3],
+                                                            [rapport.VIDE_Tension_1_OK, rapport.VIDE_Tension_2_OK, rapport.VIDE_Tension_3_OK])
             printc(f"[green]Essai à vide rédigé")
 
-            # Remise à 0 du bit de lecture
+            #Essai de synchro-résolveur
+            pdf = print_SYNCHRO(pdf, rapport.GEN_Type_Specimen, recette.SYNCHRO_Vitesse_Entrainement, recette.GEN_Toler_Vitesse_Entrainement,
+                                                                rapport.SYNCHRO_Sequence_OK, rapport.SYNCHRO_DeltaT, recette.SYNCHRO_DeltaT_Min, recette.SYNCHRO_DeltaT_Max, rapport.SYNCHRO_DeltaT_OK,
+                                                                rapport.SYNCHRO_Ordre_Signaux_OK, ["Déphasage", "Chevauchement", "Etat 1 S1", "Etat 1 S2"],
+                                                                [recette.SYNCHRO_Dephasage_Min, recette.SYNCHRO_Chevauchement_Min, recette.SYNCHRO_Duree_S1_Min, recette.SYNCHRO_Duree_S2_Min],
+                                                                [rapport.SYNCHRO_Dephasage, rapport.SYNCHRO_Chevauchement, rapport.SYNCHRO_Etat_1_S1, rapport.SYNCHRO_Etat_1_S2],
+                                                                ["---", "---", recette.SYNCHRO_Duree_S1_Max, recette.SYNCHRO_Duree_S2_Max],
+                                                                [rapport.SYNCHRO_Dephasage_OK, rapport.SYNCHRO_Chevauchement_OK, rapport.SYNCHRO_S1_OK, rapport.SYNCHRO_S2_OK])
+            printc(f"[green]Essai de synchro-résolveur rédigé")
+            
+            ## Remise à 0 du bit de lecture
             API_Lecture.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
 
+            ## Génération du rapport
             # Création de dossier basé sur le type de spécimen, la date et l'heure de l'essai
-            path = f'./XXXX/{time.strftime("%Y_%m_%d")}/{time.strftime("%H_%M_%S")}'
+            path = f'.\\{rapport.GEN_Type_Specimen}'
             # Debug
-            path = './Regio2N'
+            path = f'.\\Rapport'
             if not os.path.exists(path):
                 os.makedirs(path)
             # Génération du fichier PDF
             printc(f"[bright_cyan]Création du PDF au chemin {path}...")
-            pdf.output(f"{path}/report.pdf")
+            name = f'{time.strftime("%Y-%m-%d")}_{time.strftime("%H-%M-%S")}_report.pdf'
+            pdf.output(f'{path}\\{name}')
             printc(f'[green]OK\n')
-            break
+            os.startfile(f'{path}\\{name}')
 except KeyboardInterrupt:
     printc(f"[bright_cyan]Arrêt du programme par l'utilisateur")
     pass
