@@ -18,7 +18,6 @@ py --version
 ```bash
 py -m pip install rich
 ```
-
 - For the OPCUA client
 ```bash
 py -m pip install opcua
@@ -32,10 +31,13 @@ Update the library via Git repository (needs git installed on the computer)
 ```bash
 py -m pip install git+https://github.com/py-pdf/fpdf2.git@master
 ```
-
-- Remove a discontinued library to avoid having a warning every time the program starts
+Remove a discontinued library to avoid having a warning every time the program starts
 ```
 C:\Users\*USERNAME*\AppData\Local\Programs\Python\Python313\Lib\site-packages\fpdf\ttfonts.py
+```
+- For the CSV generation
+```bash
+py -m pip install pandas
 ```
 
 ### Complete the configuration file
@@ -47,5 +49,5 @@ C:\Users\*USERNAME*\AppData\Local\Programs\Python\Python313\Lib\site-packages\fp
 ```bash
 py ./main.py
 ```
-- It is also possible to double-click on **run_prog.bat** to start the porgram without entering the terminal
+- It is also possible to double-click on **run_prog.bat** to start the program without entering the terminal
 

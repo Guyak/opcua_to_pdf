@@ -3,6 +3,7 @@ from json import load as j_load
 from fpdf import FPDF
 from rich import print as printc
 from generate_pdf import *
+from csv_append import *
 import time
 import sys
 import os
@@ -60,7 +61,7 @@ printc(f"[green]Connecté !\n")
 ##————————————————————————————————————————————————————————————————————————————##
 ## Lecture/Ecriture des valeurs du serveur et génération de rapport
 API_Lecture = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Lecture')
-read_full = True
+read_full = False
 
 print(f"Appuyer sur CTRL-C pour arrêter le programme\n")
 try:
