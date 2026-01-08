@@ -5,11 +5,13 @@ import os
 ##————————————————————————————————————————————————————————————————————————————##
 ## Creation du document PDF
 class PDF(FPDF):
-    def __init__(self, titre, symbole, serie, *args, **kwargs):
+    def __init__(self, type, reference, symbole, serie, operateur, go, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._titre = titre
-        self._symbole = symbole
-        self._serie = serie
+        self._titre = f"{type} - {reference}"
+        self._symbole = f"{symbole}"
+        self._serie = f"Moteur N°{serie}   "
+        self._operateur = f"Etabli par : {operateur}   "
+        self._go = go
 
     def header(self):
         # Logo
@@ -22,11 +24,22 @@ class PDF(FPDF):
         # Bouger le curseur à droite
         self.cell(50)
         # Titre
-        self.cell(80, 5, self._titre, align="C", new_x="LEFT", new_y="NEXT")
+        self.cell(80, 5, self._titre, align="C", new_x="LMARGIN")
+        self.set_font_size(24)
+        if self._go :
+            self.set_text_color(50,205,50)
+            self.cell(0, 5, "GO  ", align="R", new_x="LMARGIN", new_y="NEXT")
+        else :
+            self.set_text_color(255, 0, 0)
+            self.cell(0, 5, "NOGO  ", align="R", new_x="LMARGIN", new_y="NEXT")
+        self.set_font_size(12)
+        self.set_text_color(0, 0, 0)
+        self.cell(50)
         self.cell(80, 5, self._symbole, align="C", new_x="LMARGIN", new_y="NEXT")
-        self.set_font("helvetica", style="B", size=10)
-        self.set_y(y)
-        self.cell(0, 5, self._serie, align="R", new_x="LEFT")
+        self.set_font("helvetica", size=10)
+        self.set_y(23)
+        self.cell(0, 5, self._operateur, align="R", new_x="LMARGIN", new_y="NEXT")
+        self.cell(0, 5, self._serie, align="R", new_x="LMARGIN", new_y="NEXT")
         # Encadrement de l'en-tête
         self.set_y(4)
         self.cell(0, 30, "", border=1, new_x="LMARGIN", new_y="NEXT")
@@ -37,14 +50,14 @@ class PDF(FPDF):
         # Police footer
         self.set_font("helvetica", style="I", size=8)
         # Numéro de page
-        self.cell(0, 10, f"{time.strftime("%Y/%m/%d")}", border=1, align="C")
+        self.cell(0, 10, f"{time.strftime("%Y/%m/%d")} - {time.strftime("%H:%M:%S")}", border=1, align="C")
         self.set_y(-15)
         self.cell(0, 10, f"Page {self.page_no()}/{{nb}}", align="L")
         self.set_y(-15)
         self.cell(0, 10, f"{self._serie}", align="R")
 
-def init_pdf(type_specimen, ref_specimen, symbole_specimen, serie_specimen):
-    pdf = PDF(titre=f"{type_specimen} - {ref_specimen}", symbole=f"{symbole_specimen}", serie=f"Moteur N°{serie_specimen}   ")
+def init_pdf(type_specimen, ref_specimen, symbole_specimen, serie_specimen, nom_operateur, go_essai):
+    pdf = PDF(type=type_specimen, reference=ref_specimen, symbole=symbole_specimen, serie=serie_specimen, operateur=nom_operateur, go=go_essai)
     pdf.add_font('DejaVu', '', './_fonts/DejaVuSans.ttf', uni=True)
     pdf.add_page()
     [page_largeur, go_nogo_largeur, tableau_largeur, go_nogo_x] = util_pdf(pdf)
@@ -71,7 +84,11 @@ def util_pdf(pdf):
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Définition des fonctions de création de rapport pour chaque essai
-def print_VIDE(pdf, type_specimen, vitesse, tension_accep, hyst, tension, go_nogo):
+def print_VIDE(pdf, type_specimen, vitesse, 
+                                tension_accep, 
+                                hyst, 
+                                tension, 
+                                go_nogo):
     ## Récupération de valeurs utilitaires
     [page_largeur, go_nogo_largeur, tableau_largeur, go_nogo_x] = util_pdf(pdf)
 
@@ -145,7 +162,13 @@ def print_VIDE(pdf, type_specimen, vitesse, tension_accep, hyst, tension, go_nog
     pdf.ln()
     return pdf
 
-def print_SYNCHRO(pdf, type_specimen, vitesse, toler_vitesse, sequence_ok, delta_t, delta_t_min, delta_t_max, delta_t_ok, ordre_ok, nom_Regiolis, min_Regiolis, mesure_Regiolis, max_Regiolis, go_nogo_Regiolis):
+def print_SYNCHRO(pdf, type_specimen, vitesse, toler_vitesse, 
+                                    sequence_ok, delta_t, delta_t_min, delta_t_max, delta_t_ok, 
+                                    ordre_ok, nom_Regiolis, 
+                                    min_Regiolis, 
+                                    mesure_Regiolis, 
+                                    max_Regiolis, 
+                                    go_nogo_Regiolis):
     ## Récupération de valeurs utilitaires
     [page_largeur, go_nogo_largeur, tableau_largeur, go_nogo_x] = util_pdf(pdf)
 

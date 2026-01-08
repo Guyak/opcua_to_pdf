@@ -73,8 +73,8 @@ try:
                 rapport_filtre = rapport_liste
             else:
                 #Lecture uniquement pour l'essai à faire
-                recette_filtre = [item for item in recette_liste if ("GEN" in item) or("VIDE" in item) or ("SYNCHRO" in item)]
-                rapport_filtre = [item for item in rapport_liste if ("GEN" in item) or("VIDE" in item) or ("SYNCHRO" in item)]
+                recette_filtre = [item for item in recette_liste if ("GEN" in item)]
+                rapport_filtre = [item for item in rapport_liste if ("GEN" in item)]
 
             ## Récupération des valeurs
             # Recette
@@ -92,7 +92,7 @@ try:
             printc(f'[green]OK   \n')
 
             ## Initialisation du fichier PDF
-            pdf = init_pdf(rapport.GEN_Type_Specimen, rapport.GEN_Ref_Specimen, rapport.GEN_Symbole_Specimen, rapport.GEN_Num_Serie)
+            pdf = init_pdf(rapport.GEN_Type_Specimen, rapport.GEN_Ref_Specimen, rapport.GEN_Symbole_Specimen, rapport.GEN_Num_Serie, rapport.GEN_Nom_Operateur, rapport.GEN_Go)
 
             ## Affichage de valeurs
             #Essai à vide

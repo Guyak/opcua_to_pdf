@@ -44,9 +44,9 @@ def append_dict_to_csv(csv_path, values, sep=";", encoding="utf-8"):
 # --- Exemple d'utilisation ---
 if __name__ == "__main__":
     d = {"GEN": 15, "test": 18, "VIDE": "valeur", "Ajout":"789654"}
-    append_dict_to_csv("mes_mesures.csv", d)
+    append_dict_to_csv("datas.csv", d)
     
     # Plus tard, le dict gagne une nouvelle clé :
     d2 = {"GEN": 21, "test": 17, "verif": "ok", "ajout": 45}
-    append_dict_to_csv("mes_mesures.csv", d2)
+    append_dict_to_csv("datas.csv", d2)
 '''
