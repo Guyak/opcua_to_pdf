@@ -5,13 +5,36 @@ import os
 ##————————————————————————————————————————————————————————————————————————————##
 ## Creation du document PDF
 class PDF(FPDF):
-    def __init__(self, type, reference, symbole, serie, operateur, go, *args, **kwargs):
+    def __init__(self, type=" ", reference=" ", symbole=" ", serie=" ", operateur=" ", go=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._titre = f"{type} - {reference}"
         self._symbole = f"{symbole}"
         self._serie = f"Moteur N°{serie}   "
         self._operateur = f"Etabli par : {operateur}   "
         self._go = go
+
+    def check_break(self, hauteur_essai):
+        if self.will_page_break(hauteur_essai):
+            self.add_page()
+
+    def set_font_texte(self):
+        self.set_font('DejaVu', '', 10.5)
+
+    def set_font_titre(self):
+        self.set_font("helvetica", style="B", size=12)
+
+    def set_font_case(self):
+        self.set_font('DejaVu', '', 15)
+
+    def print_go_nogo(self, statut_go, statut_nogo, hauteur):
+        self.set_font_case()
+        self.set_text_color(50,205,50)
+        self.cell(go_nogo_largeur, hauteur, statut_go, border=0, align='C')
+        self.set_text_color(255,0,0)
+        self.cell(go_nogo_largeur, hauteur, statut_nogo, border=0, align='C')
+        self.set_text_color(0,0,0)
+        self.set_font_texte()
+        self.ln()
 
     def header(self):
         # Logo
@@ -60,7 +83,6 @@ def init_pdf(type_specimen, ref_specimen, symbole_specimen, serie_specimen, nom_
     pdf = PDF(type=type_specimen, reference=ref_specimen, symbole=symbole_specimen, serie=serie_specimen, operateur=nom_operateur, go=go_essai)
     pdf.add_font('DejaVu', '', './_fonts/DejaVuSans.ttf', uni=True)
     pdf.add_page()
-    [page_largeur, go_nogo_largeur, tableau_largeur, go_nogo_x] = util_pdf(pdf)
     pdf.set_font("helvetica", style="B", size=10)
     pdf.set_x(go_nogo_x)
     pdf.set_text_color(50,205,50)
@@ -68,48 +90,223 @@ def init_pdf(type_specimen, ref_specimen, symbole_specimen, serie_specimen, nom_
     pdf.set_text_color(255,0,0)
     pdf.cell(go_nogo_largeur, 10, "NoGo", border=0, align='C', new_x="LMARGIN", new_y="NEXT")
     pdf.set_text_color(0,0,0)
-    pdf.set_font("helvetica", size=12)
+    pdf.set_font_texte()
     return pdf
 
 ##————————————————————————————————————————————————————————————————————————————##
-## Valeurs utiles
-def util_pdf(pdf):
-    # Largeur totale disponible pour la rédaction des essais
-    page_largeur = pdf.w - 20
-    # Largeur des colonnes réservée à la détermination des essais
-    go_nogo_largeur = 10
-    tableau_largeur = page_largeur - (2 * go_nogo_largeur)
-    go_nogo_x = tableau_largeur + 10
-    return [page_largeur, go_nogo_largeur, tableau_largeur, go_nogo_x]
-
-##————————————————————————————————————————————————————————————————————————————##
 ## Définition des fonctions de création de rapport pour chaque essai
-def print_VIDE(pdf, type_specimen, vitesse, 
-                                tension_accep, 
-                                hyst, 
-                                tension, 
-                                go_nogo):
-    ## Récupération de valeurs utilitaires
-    [page_largeur, go_nogo_largeur, tableau_largeur, go_nogo_x] = util_pdf(pdf)
+def print_RIF(pdf, res_min, res_max, res_UV, res_VW, res_UW, res_ok, ecart_toler, ecart, ecart_ok):
+    ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
+    hauteur_essai = hauteur_texte + hauteur_multi + (hauteur_ligne*3)
+    pdf.check_break(hauteur_essai)
 
     ## Titre
-    pdf.set_font("helvetica", style="B", size=12)
-    pdf.cell(0, 10, f"2 - Essai à vide", new_x="LMARGIN", new_y="NEXT")
-    pdf.set_font("helvetica", size=12)
+    pdf.set_font_titre()
+    pdf.cell(0, hauteur_texte, f"1 - Mesure des résistances initiales à froid", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font_texte()
 
     ## Calcul de largeur des colonnes
-    col_widths = [tableau_largeur / 4] * 4
+    col_larg = [tableau_largeur*0.2, tableau_largeur*0.4, tableau_largeur*0.4]
 
     ## Création de l'en-tête
     # Sauvegarde des valeurs xy pour réalignement après utilisation de multi-cell
     [x, y] = [pdf.get_x(), pdf.get_y()]
-    pdf.multi_cell(col_widths[0], 10, "Vitesse entrainement (tr/min)", border=1, align='C')
-    pdf.set_xy(x + col_widths[0], y)
-    pdf.cell(col_widths[1] + col_widths[2] + col_widths[3], 10, "Tension moy. (V)", border=1, align='C')
+    # Font DejaVu pour affichage du symbole ohm
+    pdf.cell(col_larg[0], hauteur_multi, "Phase", border=1, align='C')
+    pdf.cell(col_larg[1], hauteur_multi, "R à 20°C (mΩ)", border=1, align='C')
+    pdf.multi_cell(col_larg[2], hauteur_multi/2, "Tolér. R à 20°C \nMin/Max (mΩ)", border=1, align='C')
+
+    ## Mise en place des traits épais sur le tableau
+    pdf.set_line_width(1.0)
+    # Traits verticaux
+    pdf.line(x+col_larg[0], y, x+col_larg[0], y+hauteur_multi+(hauteur_ligne*3))
+    pdf.line(x+col_larg[0]+col_larg[1], y, x+col_larg[0]+col_larg[1], y+hauteur_multi+(hauteur_ligne*3))
+    pdf.line(x+tableau_largeur, y, x+tableau_largeur, y+hauteur_multi+(hauteur_ligne*3))
+    # Traits verticaux
+    pdf.line(x+col_larg[0], y, x+tableau_largeur, y)
+    pdf.line(x+col_larg[0]+col_larg[1], y+hauteur_multi+hauteur_ligne, x+tableau_largeur, y+hauteur_multi+hauteur_ligne)
+    pdf.line(x+col_larg[0], y+hauteur_multi+(hauteur_ligne*3), x+tableau_largeur, y+hauteur_multi+(hauteur_ligne*3))
+
+    pdf.set_line_width(0.2)
+    pdf.set_xy(x, y + hauteur_multi)
+
+    ## Préparation des données
+    # Création du tableau de valeurs
+    data = []
+    essai = ["U - V", str(res_UV/100), f"{res_min/100} / {res_max/100}"]
+    if res_ok:
+        essai.append("☑")
+        essai.append("☐")
+    else:
+        essai.append("☐")
+        essai.append("☑")
+    data.append(essai)
+    essai = ["V - W", str(res_VW/100), f"Ecart max. (%)", "", ""]
+    data.append(essai)
+    essai = ["U - W", str(res_UW/100), f"{ecart/100} < {ecart_toler/100}"]
+    if ecart_ok:
+        essai.append("☑")
+        essai.append("☐")
+    else:
+        essai.append("☐")
+        essai.append("☑")
+    data.append(essai)
+
+    ## Affichage des données
+    for row in data:
+        # Colonnes principales
+        pdf.cell(col_larg[0], hauteur_ligne, row[0], border=1, align='C')  # UV
+        pdf.cell(col_larg[1], hauteur_ligne, row[1], border=1, align='C')  # VW
+        pdf.cell(col_larg[2], hauteur_ligne, row[2], border=1, align='C')  # UW
+
+        # Colonne Go/NoGo (sans bordure, position fixe)
+        pdf.set_x(go_nogo_x)
+        pdf.print_go_nogo(row[3], row[4], hauteur_ligne)
+
     pdf.ln()
-    pdf.cell(col_widths[0], 10, "", border=0)  # cellule vide invisible sous "Vitesse"
+    return pdf
+
+def print_ISOL(pdf, bobinage_min, res_bobinage, bobinage_ok, paliers_min, res_paliers, paliers_ok):
+    ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
+    hauteur_essai = hauteur_texte + (hauteur_ligne*3)
+    pdf.check_break(hauteur_essai)
+
+    ## Titre
+    pdf.set_font_titre()
+    pdf.cell(0, hauteur_texte, f"2 - Mesures d'isolement", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font_texte()
+
+    ## Calcul de largeur des colonnes
+    col_larg = [tableau_largeur / 3] * 3
+
+    ## Création de l'en-tête
+    pdf.cell(col_larg[0], hauteur_ligne, "", border=0)
+    pdf.cell(col_larg[1], hauteur_ligne, "Mesure", border=1, align='C')
+    pdf.cell(col_larg[2], hauteur_ligne, "Tolérance min.", border=1, align='C')
+    pdf.ln()
+
+    ## Préparation des données
+    # Création du tableau de valeurs
+    data = []
+    essai = ["Bobinage stator", f"{res_bobinage/1000} GΩ", f"{bobinage_min/1000} GΩ"]
+    if bobinage_ok:
+        essai.append("☑")
+        essai.append("☐")
+    else:
+        essai.append("☐")
+        essai.append("☑")
+    data.append(essai)
+    essai = ["Paliers", f"{res_paliers/1000} MΩ", f"{paliers_min/1000} MΩ"]
+    if paliers_ok:
+        essai.append("☑")
+        essai.append("☐")
+    else:
+        essai.append("☐")
+        essai.append("☑")
+    data.append(essai)
+
+    ## Affichage des données
+    for row in data:
+        # Colonnes principales
+        pdf.cell(col_larg[0], hauteur_ligne, row[0], border=1, align='C')  # Nom mesure
+        pdf.cell(col_larg[1], hauteur_ligne, row[1], border=1, align='C')  # Mesure
+        pdf.cell(col_larg[2], hauteur_ligne, row[2], border=1, align='C')  # Tolérance
+
+        # Colonne Go/NoGo (sans bordure, position fixe)
+        pdf.set_x(go_nogo_x)
+        pdf.print_go_nogo(row[3], row[4], hauteur_ligne)
+
+    pdf.set_font_texte()
+    pdf.ln()
+    return pdf
+
+def print_TEMP(pdf, type_specimen, temp_toler, temp_ambiante, temp_specimen_1, temp_specimen_2, go_nogo):
+    ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
+    hauteur_essai = hauteur_texte + (hauteur_ligne*2)
+    pdf.check_break(hauteur_essai)
+
+    ## Titre
+    pdf.set_font_titre()
+    pdf.cell(0, hauteur_texte, f"3 - Sondes de température", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font_texte()
+
+    ## Calcul de largeur des colonnes
+    col_larg = [tableau_largeur / 4] * 4
+
+    ## Préparation des données
+    data = []
+
+    # Création de l'entête
+    titres = ["Temp. Ambiante (°C)"]
+    if type_specimen == "Regio2N":
+        titres.append("PT100 #1 (°C)")
+        titres.append("PT100 #2 (°C)")
+    else:
+        titres.append("PT100 (°C)")
+        titres.append(" ")
+    titres.append("Tolérance max. (°C)")
+    titres.append(" ") # Valeurs vides pour le Go/NoGo
+    titres.append(" ") # Valeurs vides pour le Go/NoGo
+    data.append(titres)
+
+    # Mise en place des mesures
+    essai = [str(temp_ambiante/10), str(temp_specimen_1/10)]
+    if type_specimen == "Regio2N":
+        essai.append(str(temp_specimen_2/10))
+    else:
+        essai.append(" ")
+    essai.append(str(temp_toler/10))
+    if go_nogo:
+        essai.append("☑")
+        essai.append("☐")
+    else:
+        essai.append("☐")
+        essai.append("☑")
+    data.append(essai)
+
+    ## Affichage des données
+    for row in data:
+        # Colonnes principales
+        pdf.cell(col_larg[0], hauteur_ligne, row[0], border=1, align='C')  # Temp. Ambiante
+        pdf.cell(col_larg[1], hauteur_ligne, row[1], border=1, align='C')  # Temp. PT100 #1
+        if type_specimen == "Regio2N":
+            pdf.cell(col_larg[2], hauteur_ligne, row[2], border=1, align='C')  # Temp. PT100 #2
+        pdf.cell(col_larg[3], hauteur_ligne, row[3], border=1, align='C')  # Tolérance
+        # Colonne Go/NoGo (sans bordure, position fixe)
+        pdf.set_x(go_nogo_x)
+        pdf.print_go_nogo(row[4], row[5], hauteur_ligne)
+
+    pdf.ln()
+    return pdf
+
+def print_VIDE(pdf, type_specimen, vitesse, tension_accep, hyst, tension, go_nogo):
+    ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
+    # Détermination du nombre d'essais
+    if type_specimen == "Regio2N":
+        n_essai = 3
+    else:
+        n_essai = 1
+    hauteur_essai = hauteur_texte + (hauteur_ligne*(2+n_essai))
+    pdf.check_break(hauteur_essai)
+
+    ## Titre
+    pdf.set_font_titre()
+    pdf.cell(0, hauteur_texte, f"6 - Essai à vide", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font_texte()
+
+    ## Calcul de largeur des colonnes
+    col_larg = [tableau_largeur / 4] * 4
+
+    ## Création de l'en-tête
+    # Sauvegarde des valeurs xy pour réalignement après utilisation de multi-cell
+    [x, y] = [pdf.get_x(), pdf.get_y()]
+    pdf.multi_cell(col_larg[0], hauteur_ligne, "Vitesse entrainement (tr/min)", border=1, align='C')
+    pdf.set_xy(x + col_larg[0], y)
+    pdf.cell(col_larg[1] + col_larg[2] + col_larg[3], hauteur_ligne, "Tension moy. (V)", border=1, align='C')
+    pdf.ln()
+    pdf.cell(col_larg[0], hauteur_ligne, "", border=0)  # cellule vide invisible sous "Vitesse"
     for val in ["Min", "Mesure", "Max"]:
-        pdf.cell(col_widths[1], 10, val, border=1, align='C')
+        pdf.cell(col_larg[1], hauteur_ligne, val, border=1, align='C')
     pdf.ln()
 
     ## Préparation des données 
@@ -121,10 +318,6 @@ def print_VIDE(pdf, type_specimen, vitesse,
         tension_max.append(round((tension_accep[idx]+hyst[idx])/10, 1))
     
     # Préparation des données pour chaque vitesse d'essai
-    if type_specimen == "Regio2N":
-        n_essai = 3
-    else:
-        n_essai = 1
     data = []
     for idx in range(n_essai):
         essai = []
@@ -143,48 +336,57 @@ def print_VIDE(pdf, type_specimen, vitesse,
     # Création du tableau
     for row in data:
         # Colonnes principales
-        pdf.cell(col_widths[0], 10, row[0], border=1, align='C')  # Vitesse
-        pdf.cell(col_widths[1], 10, row[1], border=1, align='C')  # Min
-        pdf.cell(col_widths[2], 10, row[2], border=1, align='C')  # Mesure
-        pdf.cell(col_widths[3], 10, row[3], border=1, align='C')  # Max
+        pdf.cell(col_larg[0], hauteur_ligne, row[0], border=1, align='C')  # Vitesse
+        pdf.cell(col_larg[1], hauteur_ligne, row[1], border=1, align='C')  # Min
+        pdf.cell(col_larg[2], hauteur_ligne, row[2], border=1, align='C')  # Mesure
+        pdf.cell(col_larg[3], hauteur_ligne, row[3], border=1, align='C')  # Max
 
-        # Colonne Go/NoGo sans bordure, position fixe
+        # Colonne Go/NoGo (sans bordure, position fixe)
         pdf.set_x(go_nogo_x)
-        pdf.set_font('DejaVu', '', 15)
-        pdf.set_text_color(50,205,50)
-        pdf.cell(go_nogo_largeur, 10, row[4], border=0, align='C')
-        pdf.set_text_color(255,0,0)
-        pdf.cell(go_nogo_largeur, 10, row[5], border=0, align='C')
-        pdf.set_text_color(0,0,0)
-        pdf.set_font("helvetica", size=12)
-        pdf.ln()
+        pdf.print_go_nogo(row[4], row[5], hauteur_ligne)
 
     pdf.ln()
     return pdf
 
-def print_SYNCHRO(pdf, type_specimen, vitesse, toler_vitesse, 
-                                    sequence_ok, delta_t, delta_t_min, delta_t_max, delta_t_ok, 
-                                    ordre_ok, nom_Regiolis, 
-                                    min_Regiolis, 
-                                    mesure_Regiolis, 
-                                    max_Regiolis, 
-                                    go_nogo_Regiolis):
-    ## Récupération de valeurs utilitaires
-    [page_largeur, go_nogo_largeur, tableau_largeur, go_nogo_x] = util_pdf(pdf)
+def print_SYNCHRO(pdf, type_specimen, vitesse, vitesse_toler, sequence_ok, delta_t_min, delta_t_max, delta_t, delta_t_ok, ordre_ok, min_Regiolis, mesure_Regiolis, max_Regiolis, go_nogo_Regiolis):
+    ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
+    if type_specimen == "Regiolis MOT":
+        hauteur_essai = (hauteur_texte*4) + (hauteur_ligne*6)
+    else:
+        hauteur_essai = (hauteur_texte*3) + (hauteur_multi*2) + hauteur_ligne
+    pdf.check_break(hauteur_essai)
+
+
 
     ### Création du rapport pour specimen type Moteur Regiolis
     if type_specimen == "Regiolis MOT":
+        ## Initialisation des rubriques pour le moteur Regiolis
+        rubriques_Regiolis = ["Déphasage", "Chevauchement", "Etat 1 S1", "Etat 1 S2"]
+
         ## Titre
-        pdf.set_font("helvetica", style="B", size=12)
-        pdf.cell(0, 10, f"3 - Contrôle de capteur de vitesse", new_x="LMARGIN", new_y="NEXT")
-        pdf.set_font("helvetica", size=12)
+        pdf.set_font_titre()
+        pdf.cell(0, hauteur_texte, f"7 - Contrôle de capteur de vitesse", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font_texte()
 
         ## Affichage consigne de vitesse d'entrainement
-        pdf.cell(0, 10, f"Vitesse de rotation : {vitesse} +/- {toler_vitesse} tr/min", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, hauteur_texte, f"Vitesse de rotation : {vitesse} +/- {vitesse_toler} tr/min", new_x="LMARGIN", new_y="NEXT")
 
         ## Affichage du contrôle des séquences
         #Titre
-        pdf.cell(tableau_largeur, 10, "Contrôle de l'ordre des signaux :         S1 à 1 ----> S2 à 1", border=0, align='L')
+        texte_essai = "Contrôle de l'ordre des signaux :         S1 à 1"
+        pdf.cell(pdf.get_string_width(texte_essai), hauteur_texte, texte_essai, border=0, align='L')
+
+        # Dessin de flèche entre les deux zones de texte
+        [x, y] = [pdf.get_x(), pdf.get_y()]
+        [x_0, y_0, x_1] = [pdf.get_x()+4, pdf.get_y()+(hauteur_texte/2), pdf.get_x()+(tableau_largeur/6)-3]
+        # Ligne horizontale
+        pdf.line(x_0, y_0, x_1, y_0)
+        # Pointe de flèche (triangle)
+        pdf.polygon([(x_1, y_0), (x_1-4, y_0-1), (x_1-4, y_0+1)], style='DF')
+
+        pdf.set_xy(x, y)
+        pdf.cell(tableau_largeur/6, hauteur_texte, "", border=0, align='C')
+        pdf.cell(tableau_largeur/4, hauteur_texte, "S2 à 1", border=0, align='L')
         # Affichage de l'état Go/NoGo
         if ordre_ok == 1:
             etat_go = "☑"
@@ -193,33 +395,27 @@ def print_SYNCHRO(pdf, type_specimen, vitesse, toler_vitesse,
             etat_go = "☐"
             etat_nogo ="☑"
         pdf.set_x(go_nogo_x)
-        pdf.set_font('DejaVu', '', 15)
-        pdf.set_text_color(50,205,50)
-        pdf.cell(go_nogo_largeur, 10, etat_go, border=0, align='C')
-        pdf.set_text_color(255,0,0)
-        pdf.cell(go_nogo_largeur, 10, etat_nogo, border=0, align='C', new_x="LMARGIN", new_y="NEXT")
-        pdf.set_text_color(0,0,0)
-        pdf.set_font("helvetica", size=12)
+        pdf.print_go_nogo(etat_go, etat_nogo, hauteur_texte)
         
         ## Affichage du contrôle de positionnement du synchro-résolveur
         # Titre
-        pdf.cell(0, 10, "Contrôle positionnement synchro-résolveur :", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, hauteur_texte, "Contrôle positionnement synchro-résolveur :", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
         # En-tête du tableau
-        col_widths = [tableau_largeur / 4] * 4
+        col_larg = [tableau_largeur / 4] * 4
 
-        pdf.cell(col_widths[0], 10, "", border=0)
-        pdf.cell(col_widths[1] + col_widths[2] + col_widths[3], 10, "Valeurs temporelles (µs)", border=1, align='C')
+        pdf.cell(col_larg[0], hauteur_ligne, "", border=0)
+        pdf.cell(col_larg[1] + col_larg[2] + col_larg[3], hauteur_ligne, "Valeurs temporelles (µs)", border=1, align='C')
         pdf.ln()
-        pdf.cell(col_widths[0], 10, "", border=0)
+        pdf.cell(col_larg[0], hauteur_ligne, "", border=0)
         for val in ["Min", "Mesure", "Max"]:
-            pdf.cell(col_widths[1], 10, val, border=1, align='C')
+            pdf.cell(col_larg[1], hauteur_ligne, val, border=1, align='C')
         pdf.ln()
 
         # Préparation des données
         data = []
         for idx in range(4):
             essai = []
-            essai.append(str(nom_Regiolis[idx]))
+            essai.append(str(rubriques_Regiolis[idx]))
             essai.append(str(min_Regiolis[idx]))
             essai.append(str(mesure_Regiolis[idx]))
             essai.append(str(max_Regiolis[idx]))
@@ -233,43 +429,36 @@ def print_SYNCHRO(pdf, type_specimen, vitesse, toler_vitesse,
 
         for row in data:
             # Colonnes principales
-            pdf.cell(col_widths[0], 10, row[0], border=1, align='C')  # Nom
-            pdf.cell(col_widths[1], 10, row[1], border=1, align='C')  # Min
-            pdf.cell(col_widths[2], 10, row[2], border=1, align='C')  # Mesure
-            pdf.cell(col_widths[3], 10, row[3], border=1, align='C')  # Max
+            pdf.cell(col_larg[0], hauteur_ligne, row[0], border=1, align='C')  # Nom
+            pdf.cell(col_larg[1], hauteur_ligne, row[1], border=1, align='C')  # Min
+            pdf.cell(col_larg[2], hauteur_ligne, row[2], border=1, align='C')  # Mesure
+            pdf.cell(col_larg[3], hauteur_ligne, row[3], border=1, align='C')  # Max
 
-            # Colonne Go/NoGo sans bordure, position fixe
+            # Colonne Go/NoGo (sans bordure, position fixe)
             pdf.set_x(go_nogo_x)
-            pdf.set_font('DejaVu', '', 15)
-            pdf.set_text_color(50,205,50)
-            pdf.cell(go_nogo_largeur, 10, row[4], border=0, align='C')
-            pdf.set_text_color(255,0,0)
-            pdf.cell(go_nogo_largeur, 10, row[5], border=0, align='C')
-            pdf.set_text_color(0,0,0)
-            pdf.set_font("helvetica", size=12)
-            pdf.ln()
+            pdf.print_go_nogo(row[4], row[5], hauteur_ligne)
     else:
         ## Titre
-        pdf.set_font("helvetica", style="B", size=12)
-        pdf.cell(0, 10, f"3 - Contrôle du synchro-résolveur", new_x="LMARGIN", new_y="NEXT")
-        pdf.set_font("helvetica", size=12)
+        pdf.set_font_titre()
+        pdf.cell(0, hauteur_texte, f"7 - Contrôle du synchro-résolveur", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font_texte()
 
         ## Affichage consigne de vitesse d'entrainement
-        pdf.cell(0, 10, f"Vitesse de rotation : {vitesse} +/- {toler_vitesse} tr/min", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, hauteur_texte, f"Vitesse de rotation : {vitesse} +/- {vitesse_toler} tr/min", new_x="LMARGIN", new_y="NEXT")
 
         ## Affichage du contrôle des séquences
         # Description
         [x, y] = [pdf.get_x(), pdf.get_y()]
-        pdf.multi_cell(60, 6, "Contrôle de séquence :", border=0, align='L')
+        pdf.multi_cell(60, hauteur_multi/2, "Contrôle de séquence :", border=0, align='L')
         # Affichage séquences Sin-Cos
         sequences = [f"Sin < 0\nCos < 0", f"Sin < 0\nCos > 0", f"Sin > 0\nCos > 0", f"Sin > 0\nCos < 0"]
         pdf.set_xy(x + 60, y)
         x = pdf.get_x()
         for i in range(4):
-            pdf.multi_cell(20,6, sequences[i], border=0, align='C')
+            pdf.multi_cell(20, hauteur_multi/2, sequences[i], border=0, align='C')
             pdf.set_xy(x + 20, y)
             if i > 0:
-                pdf.line(x, y, x, y+12)
+                pdf.line(x, y, x, y+hauteur_multi)
             x = pdf.get_x()
         # Affichage résumé Go/NoGo
         if sequence_ok == 1:
@@ -279,43 +468,71 @@ def print_SYNCHRO(pdf, type_specimen, vitesse, toler_vitesse,
             etat_go = "☐"
             etat_nogo ="☑"
         pdf.set_xy(go_nogo_x, y)
-        pdf.set_font('DejaVu', '', 15)
-        pdf.set_text_color(50,205,50)
-        pdf.cell(go_nogo_largeur, 12, etat_go, border=0, align='C')
-        pdf.set_text_color(255,0,0)
-        pdf.cell(go_nogo_largeur, 12, etat_nogo, border=0, align='C', new_x="LMARGIN", new_y="NEXT")
-        pdf.set_text_color(0,0,0)
-        pdf.set_font("helvetica", size=12)
+        pdf.print_go_nogo(etat_go, etat_nogo, hauteur_multi)
 
         ## Affichage du contrôle du Delta T
         # Titre
-        pdf.cell(0, 10, "Contrôle positionnement synchro-résolveur :", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, hauteur_texte, "Contrôle positionnement synchro-résolveur :", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
 
         # En-tête
-        col_widths = tableau_largeur / 2
-        pdf.cell(col_widths, 12, "Delta T (ms)", border=1, align='C')
-        pdf.multi_cell(col_widths, 6, f"Tolérances\nMin/Max", border=1, align='C', new_x="LMARGIN")
+        col_larg = tableau_largeur / 2
+        pdf.cell(col_larg, hauteur_multi, "Delta T (ms)", border=1, align='C')
+        pdf.multi_cell(col_larg, hauteur_multi/2, f"Tolérances\nMin/Max", border=1, align='C', new_x="LMARGIN")
         # Mesure et valeurs min/max
-        pdf.cell(col_widths, 10, str(delta_t/100), border=1, align='C')
-        pdf.cell(col_widths, 10, str(f"{delta_t_min/100} / {delta_t_max/100}"), border=1, align='C')
+        pdf.cell(col_larg, hauteur_ligne, str(delta_t/100), border=1, align='C')
+        pdf.cell(col_larg, hauteur_ligne, str(f"{delta_t_min/100} / {delta_t_max/100}"), border=1, align='C')
         # Statut Go / NoGo
         pdf.set_x(go_nogo_x)
-        pdf.set_font('DejaVu', '', 15)
-        pdf.set_text_color(50,205,50)
         if delta_t_ok:
-            pdf.cell(go_nogo_largeur, 10, "☑", border=0, align='C')
-            pdf.set_text_color(255,0,0)
-            pdf.cell(go_nogo_largeur, 10, "☐", border=0, align='C')
+            pdf.print_go_nogo("☑", "☐", hauteur_ligne)
         else:
-            pdf.cell(go_nogo_largeur, 10, "☐", border=0, align='C')
-            pdf.set_text_color(255,0,0)
-            pdf.cell(go_nogo_largeur, 10, "☑", border=0, align='C')
+            pdf.print_go_nogo("☐", "☑", hauteur_ligne)
+
+    pdf.ln()
+    return pdf
+
+def print_SURVIT(pdf, vitesse, duree_essai, vitesse_arret, vibration, vibration_toler, go_nogo):
+    ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
+    hauteur_essai = (hauteur_texte*3)
+    if not go_nogo:
+        hauteur_essai += hauteur_texte
+    pdf.check_break(hauteur_essai)
+
+    ## Titre
+    pdf.set_font_titre()
+    pdf.cell(0, hauteur_texte, f"8 - Essai de survitesse", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font_texte()
+
+    ## Affichage des paramètres de l'essai
+    pdf.cell(0, hauteur_texte, f"Entrainement du spécimen à {vitesse} tr/min pendant {duree_essai} secondes.", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"Vibration maximale mesurée lors de l'essai :           {vibration/100}     <     {vibration_toler/100} mm/s", border=0, align='L')
+    pdf.set_x(go_nogo_x)
+    if go_nogo:
+        pdf.print_go_nogo("☑", "☐", hauteur_texte)
+    else:
+        pdf.print_go_nogo("☐", "☑", hauteur_texte)
+        pdf.set_text_color(255,0,0)
+        pdf.cell(0, hauteur_texte, f"Essai invalide, arrêt prématuré. Vitesse atteinte avant arrêt : {vitesse_arret} tr/min", border=0, align='L')
         pdf.set_text_color(0,0,0)
-        pdf.set_font("helvetica", size=12)
         pdf.ln()
 
     pdf.ln()
     return pdf
 
 
+##————————————————————————————————————————————————————————————————————————————##
+## Valeurs utiles
+def util_pdf(pdf):
+    # Largeur totale disponible pour la rédaction des essais
+    page_largeur = pdf.w - 20
+    # Largeur des colonnes réservée à la détermination des essais
+    go_nogo_largeur = 10
+    tableau_largeur = page_largeur - (2 * go_nogo_largeur)
+    go_nogo_x = tableau_largeur + 10
+    hauteur_ligne = 8
+    hauteur_texte = 10
+    hauteur_multi = 12
+    return [page_largeur, go_nogo_largeur, tableau_largeur, go_nogo_x, hauteur_ligne, hauteur_texte, hauteur_multi]
 
+pdf_template = PDF()
+[page_largeur, go_nogo_largeur, tableau_largeur, go_nogo_x, hauteur_ligne, hauteur_texte, hauteur_multi] = util_pdf(pdf_template)

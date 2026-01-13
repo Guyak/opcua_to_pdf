@@ -64,6 +64,7 @@ API_Lecture = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Lecture')
 read_full = False
 
 print(f"Appuyer sur CTRL-C pour arrêter le programme\n")
+printc(f'[yellow]Attente de demande d\'écriture...\n')
 try:
     while True:
         if API_Lecture.get_value():
@@ -73,8 +74,8 @@ try:
                 rapport_filtre = rapport_liste
             else:
                 #Lecture uniquement pour l'essai à faire
-                recette_filtre = [item for item in recette_liste if ("GEN" in item)]
-                rapport_filtre = [item for item in rapport_liste if ("GEN" in item)]
+                recette_filtre = [item for item in recette_liste if ("GEN" in item) or ("SURVIT" in item)]
+                rapport_filtre = [item for item in rapport_liste if ("GEN" in item) or ("SURVIT" in item)]
 
             ## Récupération des valeurs
             # Recette
@@ -95,24 +96,44 @@ try:
             pdf = init_pdf(rapport.GEN_Type_Specimen, rapport.GEN_Ref_Specimen, rapport.GEN_Symbole_Specimen, rapport.GEN_Num_Serie, rapport.GEN_Nom_Operateur, rapport.GEN_Go)
 
             ## Affichage de valeurs
-            #Essai à vide
+            # Essai de résistances à froid
+            pdf = print_RIF(pdf, recette.RIF_Toler_Min, recette.RIF_Toler_Max, 
+                                rapport.RIF_Mesure_UV, rapport.RIF_Mesure_VW, rapport.RIF_Mesure_UW, rapport.RIF_Bornes_OK, 
+                                recette.RIF_Toler_Ecart, 
+                                rapport.RIF_Ecart_Max, rapport.RIF_Ecart_OK)
+            printc(f"[green]Essai de mesure des résistances initiales à froid rédigé")
+            # Essai d'isolement
+            pdf = print_ISOL(pdf, recette.ISOL_Bobinage_Min, rapport.ISOL_Bobinage, rapport.ISOL_Bobinage_OK,
+                                recette.ISOL_Paliers_Min, rapport.ISOL_Paliers, rapport.ISOL_Paliers_OK)
+            printc(f"[green]Essai d'isolement rédigé")
+            # Essai de température
+            pdf = print_TEMP(pdf, rapport.GEN_Type_Specimen, recette.TEMP_Toler_Sondes, 
+                                                            rapport.TEMP_Ambiante, rapport.TEMP_Specimen_1, rapport.TEMP_Specimen_2,
+                                                            rapport.TEMP_Go)
+            printc(f"[green]Essai de température rédigé")
+            # Essai à vide
             pdf = print_VIDE(pdf, rapport.GEN_Type_Specimen, [recette.VIDE_Vitesse_Entrainement_1, recette.VIDE_Vitesse_Entrainement_2, recette.VIDE_Vitesse_Entrainement_3],
                                                             [recette.VIDE_Tension_Accept_1, recette.VIDE_Tension_Accept_2, recette.VIDE_Tension_Accept_3],
                                                             [rapport.VIDE_Hyst_1, rapport.VIDE_Hyst_2, rapport.VIDE_Hyst_3],
                                                             [rapport.VIDE_Tension_1, rapport.VIDE_Tension_2, rapport.VIDE_Tension_3],
                                                             [rapport.VIDE_Tension_1_OK, rapport.VIDE_Tension_2_OK, rapport.VIDE_Tension_3_OK])
             printc(f"[green]Essai à vide rédigé")
-
-            #Essai de synchro-résolveur
+            # Essai de synchro-résolveur
             pdf = print_SYNCHRO(pdf, rapport.GEN_Type_Specimen, recette.SYNCHRO_Vitesse_Entrainement, recette.GEN_Toler_Vitesse_Entrainement,
-                                                                rapport.SYNCHRO_Sequence_OK, rapport.SYNCHRO_DeltaT, recette.SYNCHRO_DeltaT_Min, recette.SYNCHRO_DeltaT_Max, rapport.SYNCHRO_DeltaT_OK,
-                                                                rapport.SYNCHRO_Ordre_Signaux_OK, ["Déphasage", "Chevauchement", "Etat 1 S1", "Etat 1 S2"],
+                                                                rapport.SYNCHRO_Sequence_OK, 
+                                                                recette.SYNCHRO_DeltaT_Min, recette.SYNCHRO_DeltaT_Max, rapport.SYNCHRO_DeltaT, rapport.SYNCHRO_DeltaT_OK,
+                                                                rapport.SYNCHRO_Ordre_Signaux_OK,
                                                                 [recette.SYNCHRO_Dephasage_Min, recette.SYNCHRO_Chevauchement_Min, recette.SYNCHRO_Duree_S1_Min, recette.SYNCHRO_Duree_S2_Min],
                                                                 [rapport.SYNCHRO_Dephasage, rapport.SYNCHRO_Chevauchement, rapport.SYNCHRO_Etat_1_S1, rapport.SYNCHRO_Etat_1_S2],
                                                                 ["---", "---", recette.SYNCHRO_Duree_S1_Max, recette.SYNCHRO_Duree_S2_Max],
                                                                 [rapport.SYNCHRO_Dephasage_OK, rapport.SYNCHRO_Chevauchement_OK, rapport.SYNCHRO_S1_OK, rapport.SYNCHRO_S2_OK])
             printc(f"[green]Essai de synchro-résolveur rédigé")
-            
+            # Essai de survitesse
+            pdf = print_SURVIT(pdf, recette.SURVIT_Vitesse_Entrainement, recette.SURVIT_Duree_Essai, 
+                                    rapport.SURVIT_Vitesse_Arret, rapport.SURVIT_Vibr_Max, 
+                                    recette.SURVIT_Limite_Vibration, rapport.SURVIT_Go)
+            printc(f"[green]Essai de survitesse rédigé")
+
             ## Remise à 0 du bit de lecture
             API_Lecture.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
 
@@ -129,6 +150,9 @@ try:
             pdf.output(f'{path}\\{name}')
             printc(f'[green]OK\n')
             os.startfile(f'{path}\\{name}')
+            printc(f'[yellow]Attente de demande d\'écriture...\n')
+        else:
+            time.sleep(1)
 except KeyboardInterrupt:
     printc(f"[bright_cyan]Arrêt du programme par l'utilisateur")
     pass

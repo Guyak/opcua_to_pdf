@@ -43,10 +43,17 @@ def append_dict_to_csv(csv_path, values, sep=";", encoding="utf-8"):
 '''
 # --- Exemple d'utilisation ---
 if __name__ == "__main__":
-    d = {"GEN": 15, "test": 18, "VIDE": "valeur", "Ajout":"789654"}
+    d_r = {"GEN_r": 15, "test_r": 18, "VIDE_r": "valeur", "Ajout_r":"789654"}
+    d_s = {"GEN_s": 15, "test_s": 18, "VIDE_s": "valeur", "Ajout_s":"789654"}
+    # Modif dictionnaire pour ajouter "Recette." ou "Rapport." devant les clés
+    d_r_modifie = {f"Recette.{k}": v for k, v in d_r.items()}
+    d_s_modifie = {f"Rapport.{k}": v for k, v in d_s.items()}
+    # Union des deux dictionnaires
+    d = d_r_modifie | d_s_modifie
+    # Appel de fonction
     append_dict_to_csv("datas.csv", d)
     
-    # Plus tard, le dict gagne une nouvelle clé :
-    d2 = {"GEN": 21, "test": 17, "verif": "ok", "ajout": 45}
+    # Plus tard, le dict gagne une nouvelle clé et en supprime d'autres:
+    d2 = {"Recette.GEN_r": 21, "test": 17, "verif": "ok", "ajout": 45}
     append_dict_to_csv("datas.csv", d2)
 '''
