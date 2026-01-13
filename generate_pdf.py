@@ -66,6 +66,14 @@ class PDF(FPDF):
         # Encadrement de l'en-tête
         self.set_y(4)
         self.cell(0, 30, "", border=1, new_x="LMARGIN", new_y="NEXT")
+        # Affichage texte Go/NoGo
+        self.set_font("helvetica", style="B", size=10)
+        self.set_x(self.w-30)
+        self.set_text_color(50,205,50)
+        self.cell(10, 5, "Go", align='C')
+        self.set_text_color(255,0,0)
+        self.cell(10, 5, "NoGo", align='C', new_x="LMARGIN")
+        self.set_text_color(0,0,0)
 
     def footer(self):
         # Bouger le curseur à 1.5cm du bas de page
@@ -83,13 +91,6 @@ def init_pdf(type_specimen, ref_specimen, symbole_specimen, serie_specimen, nom_
     pdf = PDF(type=type_specimen, reference=ref_specimen, symbole=symbole_specimen, serie=serie_specimen, operateur=nom_operateur, go=go_essai)
     pdf.add_font('DejaVu', '', './_fonts/DejaVuSans.ttf', uni=True)
     pdf.add_page()
-    pdf.set_font("helvetica", style="B", size=10)
-    pdf.set_x(go_nogo_x)
-    pdf.set_text_color(50,205,50)
-    pdf.cell(go_nogo_largeur, 10, "Go", border=0, align='C')
-    pdf.set_text_color(255,0,0)
-    pdf.cell(go_nogo_largeur, 10, "NoGo", border=0, align='C', new_x="LMARGIN", new_y="NEXT")
-    pdf.set_text_color(0,0,0)
     pdf.set_font_texte()
     return pdf
 
@@ -235,7 +236,6 @@ def print_TEMP(pdf, type_specimen, temp_toler, temp_ambiante, temp_specimen_1, t
 
     ## Préparation des données
     data = []
-
     # Création de l'entête
     titres = ["Temp. Ambiante (°C)"]
     if type_specimen == "Regio2N":
@@ -276,6 +276,84 @@ def print_TEMP(pdf, type_specimen, temp_toler, temp_ambiante, temp_specimen_1, t
         pdf.set_x(go_nogo_x)
         pdf.print_go_nogo(row[4], row[5], hauteur_ligne)
 
+    pdf.ln()
+    return pdf
+
+def print_PHASE(pdf, vitesse, go_nogo):
+    ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
+    hauteur_essai = (hauteur_texte*3)
+    pdf.check_break(hauteur_essai)
+
+    ## Titre
+    pdf.set_font_titre()
+    pdf.cell(0, hauteur_texte, f"4 - Contrôle du repérage des phases", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font_texte()
+
+    ## Affichage des paramètres de l'essai
+    pdf.cell(0, hauteur_texte, f"Entrainement du spécimen à {vitesse} tr/min en sens horaire", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"Vérification automatique du repérage via relais de contrôle du sens de rotation")
+    pdf.set_x(go_nogo_x)
+    if go_nogo:
+        pdf.print_go_nogo("☑", "☐", hauteur_texte)
+    else:
+        pdf.print_go_nogo("☐", "☑", hauteur_texte)
+
+    pdf.ln()
+    return(pdf)
+
+def print_GRAISS(pdf, vitesse, duree_max, recette_AV, recette_AR, quantite_AV, quantite_AR, go, nogo):
+    ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
+    hauteur_essai = (hauteur_texte*3) + (hauteur_ligne*3)
+    if nogo:
+        hauteur_essai += hauteur_texte
+    pdf.check_break(hauteur_essai)
+
+    ## Titre
+    pdf.set_font_titre()
+    pdf.cell(0, hauteur_texte, f"5 - Graissage", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font_texte()
+
+    ## Calcul de largeur des colonnes
+    col_larg = [tableau_largeur / 4] * 4
+
+    ## Affichage des paramètres de l'essai
+    pdf.cell(0, hauteur_texte, f"Entrainement du spécimen à {vitesse} tr/min.", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"Injection de graisse sur les paliers du spécimen :", new_x="LMARGIN", new_y="NEXT")
+
+    ## Préparation des données
+    data = []
+    # Création de l'en-tête
+    titre = ["Quantité recette (g)", "Quantité finale (g)", "Quantité recette (g)", "Quantité finale (g)", " ", " "]
+    data.append(titre)
+    # Insertion des valeurs
+    essai = [str(recette_AV), str(quantite_AV), str(recette_AR), str(quantite_AR)]
+    if go:
+        essai.append("☑")
+        essai.append("☐")
+    else:
+        essai.append("☐")
+        essai.append("☑")
+    data.append(essai)
+
+    ## Affichage des données
+    pdf.cell(col_larg[0]+col_larg[1], hauteur_ligne, "Palier AVANT", border=1, align='C')
+    pdf.cell(col_larg[0]+col_larg[1], hauteur_ligne, "Palier ARRIERE", border=1, align='C')
+    pdf.ln()
+    for row in data:
+        # Colonnes principales
+        pdf.cell(col_larg[0], hauteur_ligne, row[0], border=1, align='C')  # Recette AV
+        pdf.cell(col_larg[1], hauteur_ligne, row[1], border=1, align='C')  # Valeur AV
+        pdf.cell(col_larg[2], hauteur_ligne, row[2], border=1, align='C')  # Recette AR
+        pdf.cell(col_larg[3], hauteur_ligne, row[3], border=1, align='C')  # Valeur AR
+        # Colonne Go/NoGo (sans bordure, position fixe)
+        pdf.set_x(go_nogo_x)
+        pdf.print_go_nogo(row[4], row[5], hauteur_ligne)
+
+    if nogo:
+        pdf.set_text_color(255,0,0)
+        pdf.cell(0, hauteur_texte, f"Essai invalide, durée maximale d'injection de graisse ({duree_max} secondes) dépassée", border=0, align='L')
+        pdf.set_text_color(0,0,0)
+        pdf.ln()
     pdf.ln()
     return pdf
 
@@ -333,14 +411,13 @@ def print_VIDE(pdf, type_specimen, vitesse, tension_accep, hyst, tension, go_nog
             essai.append("☑")
         data.append(essai)
 
-    # Création du tableau
+    ## Création du tableau
     for row in data:
         # Colonnes principales
         pdf.cell(col_larg[0], hauteur_ligne, row[0], border=1, align='C')  # Vitesse
         pdf.cell(col_larg[1], hauteur_ligne, row[1], border=1, align='C')  # Min
         pdf.cell(col_larg[2], hauteur_ligne, row[2], border=1, align='C')  # Mesure
         pdf.cell(col_larg[3], hauteur_ligne, row[3], border=1, align='C')  # Max
-
         # Colonne Go/NoGo (sans bordure, position fixe)
         pdf.set_x(go_nogo_x)
         pdf.print_go_nogo(row[4], row[5], hauteur_ligne)
@@ -491,10 +568,10 @@ def print_SYNCHRO(pdf, type_specimen, vitesse, vitesse_toler, sequence_ok, delta
     pdf.ln()
     return pdf
 
-def print_SURVIT(pdf, vitesse, duree_essai, vitesse_arret, vibration, vibration_toler, go_nogo):
+def print_SURVIT(pdf, vitesse, duree_essai, vitesse_arret, vibration, vibration_toler, go, nogo):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
     hauteur_essai = (hauteur_texte*3)
-    if not go_nogo:
+    if nogo:
         hauteur_essai += hauteur_texte
     pdf.check_break(hauteur_essai)
 
@@ -504,21 +581,84 @@ def print_SURVIT(pdf, vitesse, duree_essai, vitesse_arret, vibration, vibration_
     pdf.set_font_texte()
 
     ## Affichage des paramètres de l'essai
-    pdf.cell(0, hauteur_texte, f"Entrainement du spécimen à {vitesse} tr/min pendant {duree_essai} secondes.", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, hauteur_texte, f"Vibration maximale mesurée lors de l'essai :           {vibration/100}     <     {vibration_toler/100} mm/s", border=0, align='L')
+    pdf.cell(0, hauteur_texte, f"Entrainement du spécimen à {vitesse} tr/min pendant {duree_essai} secondes.", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"Surveillance par opérateur et mesure de vibrations.")
     pdf.set_x(go_nogo_x)
-    if go_nogo:
+    if go:
         pdf.print_go_nogo("☑", "☐", hauteur_texte)
     else:
         pdf.print_go_nogo("☐", "☑", hauteur_texte)
+    pdf.cell(0, hauteur_texte, f"Vibration maximale mesurée lors de l'essai :           {vibration/100}     <     {vibration_toler/100} mm/s", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
+    if nogo:
         pdf.set_text_color(255,0,0)
         pdf.cell(0, hauteur_texte, f"Essai invalide, arrêt prématuré. Vitesse atteinte avant arrêt : {vitesse_arret} tr/min", border=0, align='L')
         pdf.set_text_color(0,0,0)
         pdf.ln()
-
     pdf.ln()
     return pdf
 
+def print_VIBR(pdf, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, go_nogo):
+    ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
+    # Détermination du nombre d'essais
+    if type_specimen == "Regiolis ALT":
+        n_essai = 2
+    else:
+        n_essai = 3
+    hauteur_essai = (hauteur_texte*3) + (hauteur_ligne*(2+n_essai))
+    pdf.check_break(hauteur_essai)
+
+    ## Titre
+    pdf.set_font_titre()
+    pdf.cell(0, hauteur_texte, f"9 - Mesure des vibrations des paliers", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font_texte()
+
+    ## Calcul de largeur des colonnes
+    col_larg = [tableau_largeur / 4] * 4
+
+    ## Création de l'en-tête
+    # Texte basique au dessus du tableau
+    pdf.cell(0, hauteur_texte, "Palier vue côté bout d’arbre : CC", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, "Palier vue côté opposé bout d’arbre : COC", new_x="LMARGIN", new_y="NEXT")
+    # Sauvegarde des valeurs xy pour réalignement après utilisation de multi-cell
+    [x, y] = [pdf.get_x(), pdf.get_y()]
+    pdf.multi_cell(col_larg[0], hauteur_ligne, "Vitesse entrainement (tr/min)", border=1, align='C')
+    pdf.set_xy(x + col_larg[0], y)
+    pdf.cell(col_larg[1] + col_larg[2], hauteur_ligne, "Vibrations (mm/s)", border=1, align='C')
+    pdf.multi_cell(col_larg[3], hauteur_ligne, "Tolérance max. (mm/s)", border=1, align='C')
+    pdf.set_xy(x+col_larg[0], y+hauteur_ligne)
+    for val in ["CC", "COC"]:
+        pdf.cell(col_larg[1], hauteur_ligne, val, border=1, align='C')
+    pdf.ln()
+    
+    ## Préparation des données 
+    data = []
+    for idx in range(n_essai):
+        essai = []
+        essai.append(str(vitesse[idx]))
+        essai.append(str(vibr_CC[idx]/100))
+        essai.append(str(vibr_COC[idx]/100))
+        essai.append(str(vibr_toler[idx]/100))
+        if go_nogo[idx]:
+            essai.append("☑")
+            essai.append("☐")
+        else:
+            essai.append("☐")
+            essai.append("☑")
+        data.append(essai)
+
+    ## Création du tableau
+    for row in data:
+        # Colonnes principales
+        pdf.cell(col_larg[0], hauteur_ligne, row[0], border=1, align='C')  # Vitesse
+        pdf.cell(col_larg[1], hauteur_ligne, row[1], border=1, align='C')  # CC
+        pdf.cell(col_larg[2], hauteur_ligne, row[2], border=1, align='C')  # COC
+        pdf.cell(col_larg[3], hauteur_ligne, row[3], border=1, align='C')  # Tolérance
+        # Colonne Go/NoGo (sans bordure, position fixe)
+        pdf.set_x(go_nogo_x)
+        pdf.print_go_nogo(row[4], row[5], hauteur_ligne)
+
+    pdf.ln()
+    return pdf
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Valeurs utiles
@@ -530,7 +670,7 @@ def util_pdf(pdf):
     tableau_largeur = page_largeur - (2 * go_nogo_largeur)
     go_nogo_x = tableau_largeur + 10
     hauteur_ligne = 8
-    hauteur_texte = 10
+    hauteur_texte = 8
     hauteur_multi = 12
     return [page_largeur, go_nogo_largeur, tableau_largeur, go_nogo_x, hauteur_ligne, hauteur_texte, hauteur_multi]
 

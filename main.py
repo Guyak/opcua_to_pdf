@@ -74,8 +74,8 @@ try:
                 rapport_filtre = rapport_liste
             else:
                 #Lecture uniquement pour l'essai à faire
-                recette_filtre = [item for item in recette_liste if ("GEN" in item) or ("SURVIT" in item)]
-                rapport_filtre = [item for item in rapport_liste if ("GEN" in item) or ("SURVIT" in item)]
+                recette_filtre = [item for item in recette_liste if ("SURVIT" in item) or ("GEN" in item) or ("GRAISS" in item)]
+                rapport_filtre = [item for item in rapport_liste if ("SURVIT" in item) or ("GEN" in item) or ("GRAISS" in item)]
 
             ## Récupération des valeurs
             # Recette
@@ -111,13 +111,22 @@ try:
                                                             rapport.TEMP_Ambiante, rapport.TEMP_Specimen_1, rapport.TEMP_Specimen_2,
                                                             rapport.TEMP_Go)
             printc(f"[green]Essai de température rédigé")
+            # Essai de contrôle du repérage des phases
+            pdf = print_PHASE(pdf, recette.PHASE_Vitesse_Entrainement, rapport.PHASE_Go)
+            printc(f"[green]Essai de contrôle du repérage des phases rédigé")
+            #Essai de graissage
+            pdf = print_GRAISS(pdf, recette.GRAISS_Vitesse_Entrainement, recette.GRAISS_Tempo_Def_Graissage, 
+                                    recette.GRAISS_Quantite_Palier_AV, recette.GRAISS_Quantite_Palier_AR, 
+                                    rapport.GRAISS_Avant, rapport.GRAISS_Arriere, 
+                                    rapport.GRAISS_Go, rapport.GRAISS_NoGo)
+            printc(f"[green]Essai de graissage rédigé")  
             # Essai à vide
             pdf = print_VIDE(pdf, rapport.GEN_Type_Specimen, [recette.VIDE_Vitesse_Entrainement_1, recette.VIDE_Vitesse_Entrainement_2, recette.VIDE_Vitesse_Entrainement_3],
                                                             [recette.VIDE_Tension_Accept_1, recette.VIDE_Tension_Accept_2, recette.VIDE_Tension_Accept_3],
                                                             [rapport.VIDE_Hyst_1, rapport.VIDE_Hyst_2, rapport.VIDE_Hyst_3],
                                                             [rapport.VIDE_Tension_1, rapport.VIDE_Tension_2, rapport.VIDE_Tension_3],
                                                             [rapport.VIDE_Tension_1_OK, rapport.VIDE_Tension_2_OK, rapport.VIDE_Tension_3_OK])
-            printc(f"[green]Essai à vide rédigé")
+            printc(f"[green]Essai à vide rédigé")        
             # Essai de synchro-résolveur
             pdf = print_SYNCHRO(pdf, rapport.GEN_Type_Specimen, recette.SYNCHRO_Vitesse_Entrainement, recette.GEN_Toler_Vitesse_Entrainement,
                                                                 rapport.SYNCHRO_Sequence_OK, 
@@ -131,8 +140,16 @@ try:
             # Essai de survitesse
             pdf = print_SURVIT(pdf, recette.SURVIT_Vitesse_Entrainement, recette.SURVIT_Duree_Essai, 
                                     rapport.SURVIT_Vitesse_Arret, rapport.SURVIT_Vibr_Max, 
-                                    recette.SURVIT_Limite_Vibration, rapport.SURVIT_Go)
+                                    recette.SURVIT_Limite_Vibration,
+                                    rapport.SURVIT_Go, rapport.SURVIT_NoGo)
             printc(f"[green]Essai de survitesse rédigé")
+            # Essai d'analyse vibratoire
+            pdf = print_VIBR(pdf, rapport.GEN_Type_Specimen, [recette.VIBR_Vitesse_Entrainement_1, recette.VIBR_Vitesse_Entrainement_2, recette.VIBR_Vitesse_Entrainement_3], 
+                                                            [recette.VIBR_Vibration_Max_1, recette.VIBR_Vibration_Max_2, recette.VIBR_Vibration_Max_3], 
+                                                            [rapport.VIBR_Mesure_CC_1, rapport.VIBR_Mesure_CC_2, rapport.VIBR_Mesure_CC_3],
+                                                            [rapport.VIBR_Mesure_COC_1, rapport.VIBR_Mesure_COC_2, rapport.VIBR_Mesure_COC_3],
+                                                            [rapport.VIBR_Mesure_1_OK, rapport.VIBR_Mesure_2_OK, rapport.VIBR_Mesure_3_OK])
+            printc(f"[green]Essai d'analyse vibratoire rédigé")
 
             ## Remise à 0 du bit de lecture
             API_Lecture.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
