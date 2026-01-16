@@ -168,3 +168,4 @@ _config*.json
 *.cxob
 *.pdf
 !*EXAMPLE.pdf
+*.csv

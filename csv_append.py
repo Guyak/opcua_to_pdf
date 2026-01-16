@@ -2,43 +2,46 @@ from pathlib import Path
 import pandas as pd
 import time
 
-def append_dict_to_csv(csv_path, values, sep=";", encoding="utf-8"):
-    csv_file = Path(csv_path)
+def dict_to_csv(csv_chemin, dictionnaire, exclusions, sep=";", encoding="utf-8"):
+    csv_fichier = Path(csv_chemin)
     date_str = time.strftime("%Y-%m-%d")
-    time_str = time.strftime("%H-%M-%S")
+    heure_str = time.strftime("%H-%M-%S")
 
-    # Colonnes fixes en tête
-    fixed_cols = ["Date", "Heure"]
+    ## Colonnes fixes en tête
+    col_fixes = ["Date", "Heure"] + exclusions
 
-    # Lecture du CSV s'il existe, sinon DataFrame vide
-    if csv_file.exists():
-        df = pd.read_csv(csv_file, sep=sep, encoding=encoding)
+    ## Lecture du CSV s'il existe, sinon DataFrame vide
+    if csv_fichier.exists():
+        df = pd.read_csv(csv_fichier, sep=sep, encoding=encoding)
     else:
-        df = pd.DataFrame(columns=fixed_cols)
+        df = pd.DataFrame(columns=col_fixes)
 
-    # Tri des colonnes existantes et des clés du dictionnaire par ordre alphabétique -> pour tri en cas d'ajout de nouvel item dans le dictionnaire
-    existing_dynamic = [c for c in df.columns if c not in fixed_cols]
-    new_dynamic = sorted(set(existing_dynamic).union(values.keys()), key=str.lower)
+    ## Tri des colonnes existantes et des clés du dictionnaire par ordre alphabétique
+    # Récupération des clés existantes
+    cles_actuelles = [c for c in df.columns if c not in col_fixes]
+    # Tri des clés existantes avec les potentielles clés rajoutées par le dictionnaire
+    # (on ignore les clés qui doivent rester au début du fichier)
+    cles_nouvelles = sorted(set(cles_actuelles).union(k for k in dictionnaire.keys() if k not in exclusions), key=str.lower)
     # Ordre final des colonnes
-    final_cols = fixed_cols + new_dynamic
+    colonnes = col_fixes + cles_nouvelles
     # Reindexage du DF pour garantir la présence des nouvelles colonnes (remplies avec NaN)
-    df = df.reindex(columns=final_cols)
+    df = df.reindex(columns=colonnes)
 
-    # Nouvelle ligne
-    new_row = {col: "" for col in final_cols}  # valeurs vides par défaut
-    new_row["date"] = date_str
-    new_row["heure"] = time_str
-
-    # Remplissage avec les valeurs du dictionnaire (uniquement pour les colonnes connues)
-    for k, v in values.items():
-        if k in new_row:
-            new_row[k] = v
+    ## Nouvelle ligne
+    # Remplissage des colonnes dont la valeur n'est pas présente dans le dictionaire
+    nouvelle_ligne = {col: "" for col in colonnes}  # Valeurs vides par défaut
+    nouvelle_ligne["Date"] = date_str
+    nouvelle_ligne["Heure"] = heure_str
+    # Remplissage avec les valeurs du dictionnaire
+    for k, v in dictionnaire.items():
+        if k in nouvelle_ligne:
+            nouvelle_ligne[k] = v
 
     # Ajout de la ligne
-    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    df = pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
 
     # Écriture du CSV
-    df.to_csv(csv_file, index=False, sep=sep, encoding=encoding)
+    df.to_csv(csv_fichier, index=False, sep=sep, encoding=encoding)
 
 '''
 # --- Exemple d'utilisation ---
@@ -51,9 +54,9 @@ if __name__ == "__main__":
     # Union des deux dictionnaires
     d = d_r_modifie | d_s_modifie
     # Appel de fonction
-    append_dict_to_csv("datas.csv", d)
+    dict_to_csv("datas.csv", d)
     
     # Plus tard, le dict gagne une nouvelle clé et en supprime d'autres:
     d2 = {"Recette.GEN_r": 21, "test": 17, "verif": "ok", "ajout": 45}
-    append_dict_to_csv("datas.csv", d2)
+    dict_to_csv("datas.csv", d2)
 '''

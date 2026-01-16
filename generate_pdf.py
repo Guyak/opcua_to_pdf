@@ -72,7 +72,7 @@ class PDF(FPDF):
         self.set_text_color(50,205,50)
         self.cell(10, 5, "Go", align='C')
         self.set_text_color(255,0,0)
-        self.cell(10, 5, "NoGo", align='C', new_x="LMARGIN")
+        self.cell(10, 5, "NoGo", align='C', new_x="LMARGIN", new_y="NEXT")
         self.set_text_color(0,0,0)
 
     def footer(self):
@@ -96,14 +96,14 @@ def init_pdf(type_specimen, ref_specimen, symbole_specimen, serie_specimen, nom_
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Définition des fonctions de création de rapport pour chaque essai
-def print_RIF(pdf, res_min, res_max, res_UV, res_VW, res_UW, res_ok, ecart_toler, ecart, ecart_ok):
+def print_RIF(pdf, idx, res_min, res_max, res_UV, res_VW, res_UW, res_ok, ecart_toler, ecart, ecart_ok):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
     hauteur_essai = hauteur_texte + hauteur_multi + (hauteur_ligne*3)
     pdf.check_break(hauteur_essai)
 
     ## Titre
     pdf.set_font_titre()
-    pdf.cell(0, hauteur_texte, f"1 - Mesure des résistances initiales à froid", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"{idx} - Mesure des résistances initiales à froid", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font_texte()
 
     ## Calcul de largeur des colonnes
@@ -167,14 +167,14 @@ def print_RIF(pdf, res_min, res_max, res_UV, res_VW, res_UW, res_ok, ecart_toler
     pdf.ln()
     return pdf
 
-def print_ISOL(pdf, bobinage_min, res_bobinage, bobinage_ok, paliers_min, res_paliers, paliers_ok):
+def print_ISOL(pdf, idx, bobinage_min, res_bobinage, bobinage_ok, paliers_min, res_paliers, paliers_ok):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
     hauteur_essai = hauteur_texte + (hauteur_ligne*3)
     pdf.check_break(hauteur_essai)
 
     ## Titre
     pdf.set_font_titre()
-    pdf.cell(0, hauteur_texte, f"2 - Mesures d'isolement", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"{idx} - Mesures d'isolement", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font_texte()
 
     ## Calcul de largeur des colonnes
@@ -221,14 +221,14 @@ def print_ISOL(pdf, bobinage_min, res_bobinage, bobinage_ok, paliers_min, res_pa
     pdf.ln()
     return pdf
 
-def print_TEMP(pdf, type_specimen, temp_toler, temp_ambiante, temp_specimen_1, temp_specimen_2, go_nogo):
+def print_TEMP(pdf, idx, type_specimen, temp_toler, temp_ambiante, temp_specimen_1, temp_specimen_2, go_nogo):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
     hauteur_essai = hauteur_texte + (hauteur_ligne*2)
     pdf.check_break(hauteur_essai)
 
     ## Titre
     pdf.set_font_titre()
-    pdf.cell(0, hauteur_texte, f"3 - Sondes de température", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"{idx} - Sondes de température", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font_texte()
 
     ## Calcul de largeur des colonnes
@@ -279,14 +279,14 @@ def print_TEMP(pdf, type_specimen, temp_toler, temp_ambiante, temp_specimen_1, t
     pdf.ln()
     return pdf
 
-def print_PHASE(pdf, vitesse, go_nogo):
+def print_PHASE(pdf, idx, vitesse, go_nogo):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
     hauteur_essai = (hauteur_texte*3)
     pdf.check_break(hauteur_essai)
 
     ## Titre
     pdf.set_font_titre()
-    pdf.cell(0, hauteur_texte, f"4 - Contrôle du repérage des phases", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"{idx} - Contrôle du repérage des phases", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font_texte()
 
     ## Affichage des paramètres de l'essai
@@ -301,7 +301,7 @@ def print_PHASE(pdf, vitesse, go_nogo):
     pdf.ln()
     return(pdf)
 
-def print_GRAISS(pdf, vitesse, duree_max, recette_AV, recette_AR, quantite_AV, quantite_AR, go, nogo):
+def print_GRAISS(pdf, idx, vitesse, duree_max, recette_AV, recette_AR, quantite_AV, quantite_AR, go, nogo):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
     hauteur_essai = (hauteur_texte*3) + (hauteur_ligne*3)
     if nogo:
@@ -310,7 +310,7 @@ def print_GRAISS(pdf, vitesse, duree_max, recette_AV, recette_AR, quantite_AV, q
 
     ## Titre
     pdf.set_font_titre()
-    pdf.cell(0, hauteur_texte, f"5 - Graissage", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"{idx} - Graissage", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font_texte()
 
     ## Calcul de largeur des colonnes
@@ -357,7 +357,7 @@ def print_GRAISS(pdf, vitesse, duree_max, recette_AV, recette_AR, quantite_AV, q
     pdf.ln()
     return pdf
 
-def print_VIDE(pdf, type_specimen, vitesse, tension_accep, hyst, tension, go_nogo):
+def print_VIDE(pdf, idx, type_specimen, vitesse, tension_accep, hyst, tension, go_nogo):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
     # Détermination du nombre d'essais
     if type_specimen == "Regio2N":
@@ -369,7 +369,7 @@ def print_VIDE(pdf, type_specimen, vitesse, tension_accep, hyst, tension, go_nog
 
     ## Titre
     pdf.set_font_titre()
-    pdf.cell(0, hauteur_texte, f"6 - Essai à vide", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"{idx} - Essai à vide", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font_texte()
 
     ## Calcul de largeur des colonnes
@@ -425,7 +425,7 @@ def print_VIDE(pdf, type_specimen, vitesse, tension_accep, hyst, tension, go_nog
     pdf.ln()
     return pdf
 
-def print_SYNCHRO(pdf, type_specimen, vitesse, vitesse_toler, sequence_ok, delta_t_min, delta_t_max, delta_t, delta_t_ok, ordre_ok, min_Regiolis, mesure_Regiolis, max_Regiolis, go_nogo_Regiolis):
+def print_SYNCHRO(pdf, idx, type_specimen, vitesse, vitesse_toler, sequence_ok, delta_t_min, delta_t_max, delta_t, delta_t_ok, ordre_ok, min_Regiolis, mesure_Regiolis, max_Regiolis, go_nogo_Regiolis):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
     if type_specimen == "Regiolis MOT":
         hauteur_essai = (hauteur_texte*4) + (hauteur_ligne*6)
@@ -442,7 +442,7 @@ def print_SYNCHRO(pdf, type_specimen, vitesse, vitesse_toler, sequence_ok, delta
 
         ## Titre
         pdf.set_font_titre()
-        pdf.cell(0, hauteur_texte, f"7 - Contrôle de capteur de vitesse", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, hauteur_texte, f"{idx} - Contrôle de capteur de vitesse", new_x="LMARGIN", new_y="NEXT")
         pdf.set_font_texte()
 
         ## Affichage consigne de vitesse d'entrainement
@@ -517,7 +517,7 @@ def print_SYNCHRO(pdf, type_specimen, vitesse, vitesse_toler, sequence_ok, delta
     else:
         ## Titre
         pdf.set_font_titre()
-        pdf.cell(0, hauteur_texte, f"7 - Contrôle du synchro-résolveur", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, hauteur_texte, f"{idx} - Contrôle du synchro-résolveur", new_x="LMARGIN", new_y="NEXT")
         pdf.set_font_texte()
 
         ## Affichage consigne de vitesse d'entrainement
@@ -568,7 +568,7 @@ def print_SYNCHRO(pdf, type_specimen, vitesse, vitesse_toler, sequence_ok, delta
     pdf.ln()
     return pdf
 
-def print_SURVIT(pdf, vitesse, duree_essai, vitesse_arret, vibration, vibration_toler, go, nogo):
+def print_SURVIT(pdf, idx, vitesse, duree_essai, vitesse_arret, vibration, vibration_toler, go, nogo):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
     hauteur_essai = (hauteur_texte*3)
     if nogo:
@@ -577,7 +577,7 @@ def print_SURVIT(pdf, vitesse, duree_essai, vitesse_arret, vibration, vibration_
 
     ## Titre
     pdf.set_font_titre()
-    pdf.cell(0, hauteur_texte, f"8 - Essai de survitesse", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"{idx} - Essai de survitesse", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font_texte()
 
     ## Affichage des paramètres de l'essai
@@ -597,7 +597,7 @@ def print_SURVIT(pdf, vitesse, duree_essai, vitesse_arret, vibration, vibration_
     pdf.ln()
     return pdf
 
-def print_VIBR(pdf, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, go_nogo):
+def print_VIBR(pdf, idx, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, go_nogo):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
     # Détermination du nombre d'essais
     if type_specimen == "Regiolis ALT":
@@ -609,7 +609,7 @@ def print_VIBR(pdf, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, go_no
 
     ## Titre
     pdf.set_font_titre()
-    pdf.cell(0, hauteur_texte, f"9 - Mesure des vibrations des paliers", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"{idx} - Mesure des vibrations des paliers", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font_texte()
 
     ## Calcul de largeur des colonnes
@@ -660,6 +660,37 @@ def print_VIBR(pdf, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, go_no
     pdf.ln()
     return pdf
 
+def print_SORTIE(pdf, gemma_nogo, gemma_AFCY, def_AU, def_portes, def_carter, def_couple, lim_couple, def_comm):
+    if gemma_nogo:
+        # Si NoGo, affichage d'un message unique
+        message = f"NoGo sur le dernier essai effectué"
+    elif gemma_AFCY:
+        # Si perte CP, affichage du défaut spécifique
+        if def_AU:
+            message = f"Perte de la chaine d'arrêt d'urgence"
+        elif def_portes:
+            message = f"Ouverture d'une des portes de l'enceinte"
+        elif def_carter:
+            message = f"Ouverture du carter de protection de l'accouplement"
+        elif def_couple:
+            message = f"Dépassement de la limite de couple du moteur d'entrainement ({lim_couple}%)"
+        elif def_comm:
+            message = f"Perte de la communication d'un équipement réseau"
+        else:
+            message = f"Demande d'arrêt par l'opérateur"
+        message += f" - Arrêt des essais"
+    else:
+        # Si aucune info, sortie normale du cycle, pas de message à afficher
+        return pdf
+        
+    pdf.set_font_titre()
+    pdf.set_text_color(255,0,0)
+    pdf.cell(0, 10, message, new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font_texte()
+    pdf.set_text_color(0,0,0)
+
+    return pdf
+
 ##————————————————————————————————————————————————————————————————————————————##
 ## Valeurs utiles
 def util_pdf(pdf):
@@ -669,9 +700,9 @@ def util_pdf(pdf):
     go_nogo_largeur = 10
     tableau_largeur = page_largeur - (2 * go_nogo_largeur)
     go_nogo_x = tableau_largeur + 10
-    hauteur_ligne = 8
-    hauteur_texte = 8
-    hauteur_multi = 12
+    hauteur_ligne = 7
+    hauteur_texte = 7
+    hauteur_multi = 11
     return [page_largeur, go_nogo_largeur, tableau_largeur, go_nogo_x, hauteur_ligne, hauteur_texte, hauteur_multi]
 
 pdf_template = PDF()
