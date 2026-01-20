@@ -63,12 +63,16 @@ printc(f"[green]Connecté !\n")
 ##————————————————————————————————————————————————————————————————————————————##
 ## Lecture/Ecriture des valeurs du serveur et génération de rapport
 API_Lecture = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Lecture')
+API_Redaction_En_Cours = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Redaction_En_Cours')
 
 print(f"Appuyer sur CTRL-C pour arrêter le programme\n")
 printc(f'[yellow]Attente de demande d\'écriture...\n')
 try:
     while True:
         if API_Lecture.get_value():
+            ## Validation de la demande de rédaction
+            API_Redaction_En_Cours.set_value(ua.DataValue(ua.Variant(True, ua.VariantType.Boolean)))
+
             ##———————————————————————————————————————————————————————————————##
             ## Debug : filtre des valeurs à lire pour accélérer le programme
             read_full = True
@@ -231,6 +235,7 @@ try:
 
             ## Remise à 0 du bit de lecture
             API_Lecture.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+            API_Redaction_En_Cours.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
 
             printc(f'[yellow]Attente de demande d\'écriture...\n')
         else:
