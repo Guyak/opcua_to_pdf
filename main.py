@@ -54,7 +54,7 @@ client.session_timeout = 30000
 print(f'Connexion au serveur "{url}"...')
 try:
     client.connect()
-except ConnectionRefusedError:
+except (ConnectionRefusedError, TimeoutError):
     printc(f"[red]Connexion échouée, fermeture du programme...")
     sys.exit(1)
 
