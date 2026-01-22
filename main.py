@@ -223,11 +223,18 @@ try:
                 os.makedirs(chemin)
             # Génération du fichier PDF
             printc(f"[bright_cyan]Création du PDF au chemin {chemin} ...")
+            # Nom du fichier : Date + Heure + Symbole Spécimen + N° Série
             nom_pdf = f'{time.strftime("%Y%m%d")}_{time.strftime("%HH%M")}_{rapport.GEN_Symbole_Specimen}_{rapport.GEN_Num_Serie}'
+            # + Type d'essai (AUTO ou SEMI-AUTO)
             if rapport.GEN_AUTO:
                 nom_pdf += '_AUTO'
             elif rapport.GEN_SEMI_AUTO:
                 nom_pdf += '_SEMIAUTO'
+            # + Résultat essai
+            if rapport.GEN_Go:
+                nom_pdf += 'GO'
+            else:
+                nom_pdf += "_NOGO"
             nom_pdf += '.pdf'
             pdf.output(f'{chemin}\\{nom_pdf}')
             printc(f'[green]OK\n')
