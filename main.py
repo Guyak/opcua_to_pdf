@@ -82,8 +82,8 @@ try:
                 rapport_filtre = rapport_liste
             else:
                 #Lecture uniquement pour l'essai à faire
-                recette_filtre = [item for item in recette_liste if ("GEN" in item)]
-                rapport_filtre = [item for item in rapport_liste if ("GEN" in item)]
+                recette_filtre = [item for item in recette_liste if ("GEN" in item) or ("VIBR" in item)]
+                rapport_filtre = [item for item in rapport_liste if ("GEN" in item) or ("VIBR" in item)]
             ##———————————————————————————————————————————————————————————————##
 
             ## Récupération des valeurs
@@ -187,8 +187,12 @@ try:
                         pdf = print_VIBR(pdf, idx,
                                             rapport.GEN_Type_Specimen, [recette.VIBR_Vitesse_Entrainement_1, recette.VIBR_Vitesse_Entrainement_2, recette.VIBR_Vitesse_Entrainement_3], 
                                             [recette.VIBR_Vibration_Max_1, recette.VIBR_Vibration_Max_2, recette.VIBR_Vibration_Max_3], 
-                                            [rapport.VIBR_Mesure_CC_1, rapport.VIBR_Mesure_CC_2, rapport.VIBR_Mesure_CC_3],
-                                            [rapport.VIBR_Mesure_COC_1, rapport.VIBR_Mesure_COC_2, rapport.VIBR_Mesure_COC_3],
+                                            [rapport.VIBR_V_CC_1, rapport.VIBR_V_CC_2, rapport.VIBR_V_CC_3],
+                                            [rapport.VIBR_V_COC_1, rapport.VIBR_V_COC_2, rapport.VIBR_V_COC_3],
+                                            [rapport.VIBR_AHF_CC_1, rapport.VIBR_AHF_CC_2, rapport.VIBR_AHF_CC_3],
+                                            [rapport.VIBR_AHF_COC_1, rapport.VIBR_AHF_COC_2, rapport.VIBR_AHF_COC_3],
+                                            [rapport.VIBR_RL_CC_1, rapport.VIBR_RL_CC_2, rapport.VIBR_RL_CC_3],
+                                            [rapport.VIBR_RL_COC_1, rapport.VIBR_RL_COC_2, rapport.VIBR_RL_COC_3],
                                             [rapport.VIBR_Mesure_1_OK, rapport.VIBR_Mesure_2_OK, rapport.VIBR_Mesure_3_OK])
                         print(f"Essai d'analyse vibratoire rédigé")
                     case _:

@@ -378,7 +378,7 @@ def print_VIDE(pdf, idx, type_specimen, vitesse, tension_accep, hyst, tension, g
     ## Création de l'en-tête
     # Sauvegarde des valeurs xy pour réalignement après utilisation de multi-cell
     [x, y] = [pdf.get_x(), pdf.get_y()]
-    pdf.multi_cell(col_larg[0], hauteur_ligne, "Vitesse entrainement (tr/min)", border=1, align='C')
+    pdf.multi_cell(col_larg[0], hauteur_ligne, "Entrainement \n(tr/min)", border=1, align='C')
     pdf.set_xy(x + col_larg[0], y)
     pdf.cell(col_larg[1] + col_larg[2] + col_larg[3], hauteur_ligne, "Tension moy. (V)", border=1, align='C')
     pdf.ln()
@@ -446,7 +446,7 @@ def print_SYNCHRO(pdf, idx, type_specimen, vitesse, vitesse_toler, sequence_ok, 
         pdf.set_font_texte()
 
         ## Affichage consigne de vitesse d'entrainement
-        pdf.cell(0, hauteur_texte, f"Vitesse de rotation : {vitesse} +/- {vitesse_toler} tr/min", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, hauteur_texte, f"Vitesse d'entrainement : {vitesse} +/- {vitesse_toler} tr/min", new_x="LMARGIN", new_y="NEXT")
 
         ## Affichage du contrôle des séquences
         #Titre
@@ -521,7 +521,7 @@ def print_SYNCHRO(pdf, idx, type_specimen, vitesse, vitesse_toler, sequence_ok, 
         pdf.set_font_texte()
 
         ## Affichage consigne de vitesse d'entrainement
-        pdf.cell(0, hauteur_texte, f"Vitesse de rotation : {vitesse} +/- {vitesse_toler} tr/min", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, hauteur_texte, f"Vitesse d'entrainement : {vitesse} +/- {vitesse_toler} tr/min", new_x="LMARGIN", new_y="NEXT")
 
         ## Affichage du contrôle des séquences
         # Description
@@ -597,7 +597,7 @@ def print_SURVIT(pdf, idx, vitesse, duree_essai, vitesse_arret, vibration, vibra
     pdf.ln()
     return pdf
 
-def print_VIBR(pdf, idx, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, go_nogo):
+def print_VIBR(pdf, idx, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, AHF_CC, AHF_COC, RL_CC, RL_COC, go_nogo):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
     # Détermination du nombre d'essais
     if type_specimen == "Regiolis ALT":
@@ -613,21 +613,32 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, 
     pdf.set_font_texte()
 
     ## Calcul de largeur des colonnes
-    col_larg = [tableau_largeur / 4] * 4
+    col_larg = [tableau_largeur*2/10] + [tableau_largeur*8/70]*7
 
     ## Création de l'en-tête
     # Texte basique au dessus du tableau
     pdf.cell(0, hauteur_texte, "Palier vue côté bout d’arbre : CC", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, hauteur_texte, "Palier vue côté opposé bout d’arbre : COC", new_x="LMARGIN", new_y="NEXT")
-    # Sauvegarde des valeurs xy pour réalignement après utilisation de multi-cell
+    # Sauvegarde des valeurs xy pour réalignement après utilisation de multi-cell et dessin de ligne
     [x, y] = [pdf.get_x(), pdf.get_y()]
-    pdf.multi_cell(col_larg[0], hauteur_ligne, "Vitesse entrainement (tr/min)", border=1, align='C')
+    # Dessin des lignes épaisses
+    pdf.set_line_width(1.0)
+
+    pdf.line(x+col_larg[0], y, x+col_larg[0], y+(hauteur_ligne*(2+n_essai)))
+    pdf.line(x+col_larg[0]+col_larg[1]+col_larg[2]+col_larg[3] , y, x+col_larg[0]+col_larg[1]+col_larg[2]+col_larg[3], y+(hauteur_ligne*(2+n_essai)))
+    pdf.line(x+col_larg[0]+col_larg[1]+col_larg[2]+col_larg[3]+col_larg[4]+col_larg[5], y, x+col_larg[0]+col_larg[1]+col_larg[2]+col_larg[3]+col_larg[4]+col_larg[5], y+(hauteur_ligne*(2+n_essai)))
+
+    pdf.set_line_width(0.2)
+
+    # Remplissage de l'entête
+    pdf.multi_cell(col_larg[0], hauteur_ligne, "Entrainement \n(tr/min)", border=1, align='C')
     pdf.set_xy(x + col_larg[0], y)
-    pdf.cell(col_larg[1] + col_larg[2], hauteur_ligne, "Vibrations (mm/s)", border=1, align='C')
-    pdf.multi_cell(col_larg[3], hauteur_ligne, "Tolérance max. (mm/s)", border=1, align='C')
+    pdf.cell(col_larg[1] + col_larg[2] + col_larg[3], hauteur_ligne, "Défaut Balourd (mm/s)", border=1, align='C')
+    pdf.cell(col_larg[4] + col_larg[5], hauteur_ligne, "Accél. HF (m/s²)", border=1, align='C')
+    pdf.cell(col_larg[6] + col_larg[7], hauteur_ligne, "Défaut Roulement", border=1, align='C')
     pdf.set_xy(x+col_larg[0], y+hauteur_ligne)
-    for val in ["CC", "COC"]:
-        pdf.cell(col_larg[1], hauteur_ligne, val, border=1, align='C')
+    for idx,val in enumerate(["CC", "COC", "Max.", "CC", "COC", "CC", "COC"], start=1):
+        pdf.cell(col_larg[idx], hauteur_ligne, val, border=1, align='C')
     pdf.ln()
     
     ## Préparation des données 
@@ -638,6 +649,10 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, 
         essai.append(str(vibr_CC[idx]/100))
         essai.append(str(vibr_COC[idx]/100))
         essai.append(str(vibr_toler[idx]/100))
+        essai.append(str(AHF_CC[idx]/100))
+        essai.append(str(AHF_COC[idx]/100))
+        essai.append(str(RL_CC[idx]/100))
+        essai.append(str(RL_COC[idx]/100))
         if go_nogo[idx]:
             essai.append("☑")
             essai.append("☐")
@@ -650,12 +665,16 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, 
     for row in data:
         # Colonnes principales
         pdf.cell(col_larg[0], hauteur_ligne, row[0], border=1, align='C')  # Vitesse
-        pdf.cell(col_larg[1], hauteur_ligne, row[1], border=1, align='C')  # CC
-        pdf.cell(col_larg[2], hauteur_ligne, row[2], border=1, align='C')  # COC
+        pdf.cell(col_larg[1], hauteur_ligne, row[1], border=1, align='C')  # V CC
+        pdf.cell(col_larg[2], hauteur_ligne, row[2], border=1, align='C')  # V COC
         pdf.cell(col_larg[3], hauteur_ligne, row[3], border=1, align='C')  # Tolérance
+        pdf.cell(col_larg[4], hauteur_ligne, row[4], border=1, align='C')  # AHF CC
+        pdf.cell(col_larg[5], hauteur_ligne, row[5], border=1, align='C')  # AHF COC
+        pdf.cell(col_larg[6], hauteur_ligne, row[6], border=1, align='C')  # RL CC
+        pdf.cell(col_larg[7], hauteur_ligne, row[7], border=1, align='C')  # RL COC
         # Colonne Go/NoGo (sans bordure, position fixe)
         pdf.set_x(go_nogo_x)
-        pdf.print_go_nogo(row[4], row[5], hauteur_ligne)
+        pdf.print_go_nogo(row[8], row[9], hauteur_ligne)
 
     pdf.ln()
     return pdf
