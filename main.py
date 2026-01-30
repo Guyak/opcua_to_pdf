@@ -4,6 +4,7 @@ from fpdf import FPDF
 from rich import print as printc
 from generate_pdf import *
 from csv_append import *
+from acoem_copy import *
 import time
 import sys
 import os
@@ -92,13 +93,13 @@ try:
             for idx,i in enumerate(recette_filtre, start=1):
                 print(f"{idx}/{len(recette_filtre)}", end="\r")
                 setattr(recette, i, client.get_node(f'ns=2;s=API_425056.Tags.Recette.{i}').get_value())
-            printc(f'[green]OK   ')
+            printc(f'[green]OK     ')
             # Résultats
             printc(f'[bright_cyan]Récupération des résultats des essais...')
             for idx,i in enumerate(rapport_filtre, start=1):
                 print(f"{idx}/{len(rapport_filtre)}", end="\r")
                 setattr(rapport, i, client.get_node(f'ns=2;s=API_425056.Tags.Rapport.{i}').get_value())
-            printc(f'[green]OK   \n')
+            printc(f'[green]OK     \n')
 
             ## Création du fichier PDF
             printc(f"[bright_cyan]Rédaction du rapport...")
@@ -220,27 +221,33 @@ try:
             printc(f'[green]OK\n')
 
             ## Génération du rapport
-            # Création de dossier basé sur le type de spécimen, la date et l'heure de l'essai
-            chemin = f'{credentials["root"]}\\{rapport.GEN_Type_Specimen}\\{rapport.GEN_Symbole_Specimen}'
-            os.makedirs(chemin, exist_ok=True)
-            # Génération du fichier PDF
-            printc(f"[bright_cyan]Création du PDF au chemin {chemin} ...")
-            # Nom du fichier : Date + Heure + Symbole Spécimen + N° Série
-            nom_pdf = f'{time.strftime("%Y%m%d")}_{time.strftime("%HH%M")}_{rapport.GEN_Symbole_Specimen}_{rapport.GEN_Num_Serie}'
+            # Création de dossier basé sur le type de spécimen et toutes les informations relatives à l'essai
+            date = time.strftime("%Y%m%d")
+            heure = time.strftime("%HH%M")
+            chemin = f'{credentials["root"]}\\{rapport.GEN_Type_Specimen}\\{rapport.GEN_Symbole_Specimen}\\{date}_{heure}_{rapport.GEN_Symbole_Specimen}_{rapport.GEN_Num_Serie}'
             # + Type d'essai (AUTO ou SEMI-AUTO)
             if rapport.GEN_AUTO:
-                nom_pdf += '_AUTO'
+                chemin += '_AUTO'
             elif rapport.GEN_SEMI_AUTO:
-                nom_pdf += '_SEMIAUTO'
+                chemin += '_SEMIAUTO'
             # + Résultat essai
             if rapport.GEN_Go:
-                nom_pdf += 'GO'
+                chemin += 'GO'
             else:
-                nom_pdf += "_NOGO"
-            nom_pdf += '.pdf'
+                chemin += "_NOGO"
+            os.makedirs(chemin, exist_ok=True)
+            printc(f"[bright_cyan]Création du PDF...\nChemin : {chemin}")
+            nom_pdf = 'rapport.pdf'
             pdf.output(f'{chemin}\\{nom_pdf}')
             printc(f'[green]OK\n')
             os.startfile(f'{chemin}\\{nom_pdf}')
+
+            ## Copie des mesures effectuées par le MV-x dans le dossier du rapport
+            dest_mvx = chemin + f"\\MVx"
+            src_mvx = "C:\\SftpRoot\\var\\mvx\\Measurements"
+            printc(f"[bright_cyan]Déplacement des mesures effectuées par le MV-x...\nChemin : {dest_mvx}")
+            move_acoem_mesures(src_mvx, dest_mvx)
+            printc(f'[green]OK     \n')
 
             ## Remise à 0 du bit de lecture
             API_Lecture.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
