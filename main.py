@@ -10,7 +10,7 @@ import os
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Extraction des fichiers de configuration
-config_file = "_config_opcua.json"
+config_file = "_config.json"
 with open(config_file) as file:
     credentials = j_load(file)
 config_file = "_config_listes.json"
@@ -204,10 +204,9 @@ try:
                                     rapport.GEN_Sortie_Limite_Couple, recette.GEN_Limite_Couple, rapport.GEN_Sortie_Erreur_Comm)
             printc(f'[green]OK\n')
 
-            ## Sauvegarde des paramètres dans un fihcier CSV
-            chemin = f'.\\Rapport\\{rapport.GEN_Type_Specimen}'
-            if not os.path.exists(chemin):
-                os.makedirs(chemin)
+            ## Sauvegarde des paramètres dans un fichier CSV
+            chemin = f'{credentials["root"]}\\{rapport.GEN_Type_Specimen}'
+            os.makedirs(chemin, exist_ok=True) # exist_ok = True permet d'ignorer la commande si le dossier existe déjà
             printc(f"[bright_cyan]Remplissage du fichier CSV au chemin {chemin} ...")
             # Ajout de l'en-tête "Recette" et "Rapport" pour aider à la lecture
             dict_recette = {f"Recette.{k}": v for k, v in recette._data.items()}
@@ -222,9 +221,8 @@ try:
 
             ## Génération du rapport
             # Création de dossier basé sur le type de spécimen, la date et l'heure de l'essai
-            chemin = f'.\\Rapport\\{rapport.GEN_Type_Specimen}\\{rapport.GEN_Symbole_Specimen}'
-            if not os.path.exists(chemin):
-                os.makedirs(chemin)
+            chemin = f'{credentials["root"]}\\{rapport.GEN_Type_Specimen}\\{rapport.GEN_Symbole_Specimen}'
+            os.makedirs(chemin, exist_ok=True)
             # Génération du fichier PDF
             printc(f"[bright_cyan]Création du PDF au chemin {chemin} ...")
             # Nom du fichier : Date + Heure + Symbole Spécimen + N° Série

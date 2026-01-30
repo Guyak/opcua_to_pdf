@@ -2,4 +2,5 @@
     "server_url": "opc.tcp://XXX.XXX.XXX.XXX:4840/XXX",
     "username": "YOUR USERNAME",
     "password": "YOUR PASSWORD"
+    "root": "ROOT:/PATH/FOR/OUTPUTS"
 }

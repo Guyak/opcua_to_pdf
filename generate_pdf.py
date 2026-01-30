@@ -48,6 +48,7 @@ class PDF(FPDF):
         self.cell(50)
         # Titre
         self.cell(80, 5, self._titre, align="C", new_x="LMARGIN")
+        # GO/NOGO global
         self.set_font_size(24)
         if self._go :
             self.set_text_color(50,205,50)
@@ -58,7 +59,9 @@ class PDF(FPDF):
         self.set_font_size(12)
         self.set_text_color(0, 0, 0)
         self.cell(50)
+        # Symbole
         self.cell(80, 5, self._symbole, align="C", new_x="LMARGIN", new_y="NEXT")
+        # Nom d'opérateur et numéro de série
         self.set_font("helvetica", size=10)
         self.set_y(23)
         self.cell(0, 5, self._operateur, align="R", new_x="LMARGIN", new_y="NEXT")
@@ -80,8 +83,9 @@ class PDF(FPDF):
         self.set_y(-15)
         # Police footer
         self.set_font("helvetica", style="I", size=8)
+        # Date et heure
+        self.cell(0, 10, f"{time.strftime("%Y/%m/%d")} - {time.strftime("%HH%M")}", border=1, align="C")
         # Numéro de page
-        self.cell(0, 10, f"{time.strftime("%Y/%m/%d")} - {time.strftime("%H:%M:%S")}", border=1, align="C")
         self.set_y(-15)
         self.cell(0, 10, f"Page {self.page_no()}/{{nb}}", align="L")
         self.set_y(-15)
@@ -123,7 +127,7 @@ def print_RIF(pdf, idx, res_min, res_max, res_UV, res_VW, res_UW, res_ok, ecart_
     pdf.line(x+col_larg[0], y, x+col_larg[0], y+hauteur_multi+(hauteur_ligne*3))
     pdf.line(x+col_larg[0]+col_larg[1], y, x+col_larg[0]+col_larg[1], y+hauteur_multi+(hauteur_ligne*3))
     pdf.line(x+tableau_largeur, y, x+tableau_largeur, y+hauteur_multi+(hauteur_ligne*3))
-    # Traits verticaux
+    # Traits horizontaux
     pdf.line(x+col_larg[0], y, x+tableau_largeur, y)
     pdf.line(x+col_larg[0]+col_larg[1], y+hauteur_multi+hauteur_ligne, x+tableau_largeur, y+hauteur_multi+hauteur_ligne)
     pdf.line(x+col_larg[0], y+hauteur_multi+(hauteur_ligne*3), x+tableau_largeur, y+hauteur_multi+(hauteur_ligne*3))
