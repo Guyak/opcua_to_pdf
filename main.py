@@ -187,14 +187,15 @@ try:
                         # Essai d'analyse vibratoire
                         pdf = print_VIBR(pdf, idx,
                                             rapport.GEN_Type_Specimen, [recette.VIBR_Vitesse_Entrainement_1, recette.VIBR_Vitesse_Entrainement_2, recette.VIBR_Vitesse_Entrainement_3], 
-                                            [recette.VIBR_Vibration_Max_1, recette.VIBR_Vibration_Max_2, recette.VIBR_Vibration_Max_3], 
-                                            [rapport.VIBR_V_CC_1, rapport.VIBR_V_CC_2, rapport.VIBR_V_CC_3],
-                                            [rapport.VIBR_V_COC_1, rapport.VIBR_V_COC_2, rapport.VIBR_V_COC_3],
-                                            [rapport.VIBR_AHF_CC_1, rapport.VIBR_AHF_CC_2, rapport.VIBR_AHF_CC_3],
-                                            [rapport.VIBR_AHF_COC_1, rapport.VIBR_AHF_COC_2, rapport.VIBR_AHF_COC_3],
-                                            [rapport.VIBR_RL_CC_1, rapport.VIBR_RL_CC_2, rapport.VIBR_RL_CC_3],
-                                            [rapport.VIBR_RL_COC_1, rapport.VIBR_RL_COC_2, rapport.VIBR_RL_COC_3],
-                                            [rapport.VIBR_Mesure_1_OK, rapport.VIBR_Mesure_2_OK, rapport.VIBR_Mesure_3_OK])
+                                            [recette.VIBR_V_Max_CC_1, recette.VIBR_V_Max_CC_2, recette.VIBR_V_Max_CC_3], [recette.VIBR_V_Max_COC_1, recette.VIBR_V_Max_COC_2, recette.VIBR_V_Max_COC_3], 
+                                            [rapport.VIBR_V_CC_1, rapport.VIBR_V_CC_2, rapport.VIBR_V_CC_3], [rapport.VIBR_V_COC_1, rapport.VIBR_V_COC_2, rapport.VIBR_V_COC_3],
+                                            [recette.VIBR_AHF_Max_CC_1, recette.VIBR_AHF_Max_CC_2, recette.VIBR_AHF_Max_CC_3], [recette.VIBR_AHF_Max_COC_1, recette.VIBR_AHF_Max_COC_2, recette.VIBR_AHF_Max_COC_3], 
+                                            [rapport.VIBR_AHF_CC_1, rapport.VIBR_AHF_CC_2, rapport.VIBR_AHF_CC_3], [rapport.VIBR_AHF_COC_1, rapport.VIBR_AHF_COC_2, rapport.VIBR_AHF_COC_3],
+                                            [recette.VIBR_RL_Max_CC_1, recette.VIBR_RL_Max_CC_2, recette.VIBR_RL_Max_CC_3], [recette.VIBR_RL_Max_COC_1, recette.VIBR_RL_Max_COC_2, recette.VIBR_RL_Max_COC_3], 
+                                            [rapport.VIBR_RL_CC_1, rapport.VIBR_RL_CC_2, rapport.VIBR_RL_CC_3], [rapport.VIBR_RL_COC_1, rapport.VIBR_RL_COC_2, rapport.VIBR_RL_COC_3],
+                                            [rapport.VIBR_V_1_OK, rapport.VIBR_V_2_OK, rapport.VIBR_V_3_OK],
+                                            [rapport.VIBR_AHF_1_OK, rapport.VIBR_AHF_2_OK, rapport.VIBR_AHF_3_OK],
+                                            [rapport.VIBR_RL_1_OK, rapport.VIBR_RL_2_OK, rapport.VIBR_RL_3_OK])
                         print(f"Essai d'analyse vibratoire rédigé")
                     case _:
                         printc(f"[yellow]Dernier essai atteint")
@@ -224,20 +225,21 @@ try:
             # Création de dossier basé sur le type de spécimen et toutes les informations relatives à l'essai
             date = time.strftime("%Y%m%d")
             heure = time.strftime("%HH%M")
-            chemin = f'{credentials["root"]}\\{rapport.GEN_Type_Specimen}\\{rapport.GEN_Symbole_Specimen}\\{date}_{heure}_{rapport.GEN_Symbole_Specimen}_{rapport.GEN_Num_Serie}'
+            id_essai = f'{date}_{heure}_{rapport.GEN_Symbole_Specimen}_{rapport.GEN_Num_Serie}'
             # + Type d'essai (AUTO ou SEMI-AUTO)
             if rapport.GEN_AUTO:
-                chemin += '_AUTO'
+                id_essai += '_AUTO'
             elif rapport.GEN_SEMI_AUTO:
-                chemin += '_SEMIAUTO'
+                id_essai += '_SEMIAUTO'
             # + Résultat essai
             if rapport.GEN_Go:
-                chemin += 'GO'
+                id_essai += 'GO'
             else:
-                chemin += "_NOGO"
+                id_essai += "_NOGO"
+            chemin = f'{credentials["root"]}\\{rapport.GEN_Type_Specimen}\\{rapport.GEN_Symbole_Specimen}\\' + id_essai
             os.makedirs(chemin, exist_ok=True)
             printc(f"[bright_cyan]Création du PDF...\nChemin : {chemin}")
-            nom_pdf = 'rapport.pdf'
+            nom_pdf = id_essai + f'.pdf'
             pdf.output(f'{chemin}\\{nom_pdf}')
             printc(f'[green]OK\n')
             os.startfile(f'{chemin}\\{nom_pdf}')
@@ -246,8 +248,11 @@ try:
             dest_mvx = chemin + f"\\MVx"
             src_mvx = "C:\\SftpRoot\\var\\mvx\\Measurements"
             printc(f"[bright_cyan]Déplacement des mesures effectuées par le MV-x...\nChemin : {dest_mvx}")
-            move_acoem_mesures(src_mvx, dest_mvx)
-            printc(f'[green]OK     \n')
+            try:
+                move_acoem_mesures(src_mvx, dest_mvx)
+                printc(f'[green]OK     \n')
+            except FileNotFoundError:
+                printc(f"[red]Dossier [{src_mvx}] inexistant, rien n'a été déplacé\n")
 
             ## Remise à 0 du bit de lecture
             API_Lecture.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))

@@ -601,14 +601,14 @@ def print_SURVIT(pdf, idx, vitesse, duree_essai, vitesse_arret, vibration, vibra
     pdf.ln()
     return pdf
 
-def print_VIBR(pdf, idx, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, AHF_CC, AHF_COC, RL_CC, RL_COC, go_nogo):
+def print_VIBR(pdf, idx, type_specimen, vitesse, V_toler_CC, V_toler_COC, V_CC, V_COC, AHF_toler_CC, AHF_toler_COC, AHF_CC, AHF_COC, RL_toler_CC, RL_toler_COC, RL_CC, RL_COC, go_nogo_V, go_nogo_AHF, go_nogo_RL):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
     # Détermination du nombre d'essais
     if type_specimen == "Regiolis ALT":
         n_essai = 2
     else:
         n_essai = 3
-    hauteur_essai = (hauteur_texte*3) + (hauteur_ligne*(2+n_essai))
+    hauteur_essai = (hauteur_texte*3) + (hauteur_ligne*(2+(3*n_essai)))
     pdf.check_break(hauteur_essai)
 
     ## Titre
@@ -617,7 +617,7 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, 
     pdf.set_font_texte()
 
     ## Calcul de largeur des colonnes
-    col_larg = [tableau_largeur*2/10] + [tableau_largeur*8/70]*7
+    col_larg = [tableau_largeur*0.23] + [tableau_largeur*0.07] + [tableau_largeur*0.175]*4
 
     ## Création de l'en-tête
     # Texte basique au dessus du tableau
@@ -625,39 +625,70 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, 
     pdf.cell(0, hauteur_texte, "Palier vue côté opposé bout d’arbre : COC", new_x="LMARGIN", new_y="NEXT")
     # Sauvegarde des valeurs xy pour réalignement après utilisation de multi-cell et dessin de ligne
     [x, y] = [pdf.get_x(), pdf.get_y()]
-    # Dessin des lignes épaisses
-    pdf.set_line_width(1.0)
 
-    pdf.line(x+col_larg[0], y, x+col_larg[0], y+(hauteur_ligne*(2+n_essai)))
-    pdf.line(x+col_larg[0]+col_larg[1]+col_larg[2]+col_larg[3] , y, x+col_larg[0]+col_larg[1]+col_larg[2]+col_larg[3], y+(hauteur_ligne*(2+n_essai)))
-    pdf.line(x+col_larg[0]+col_larg[1]+col_larg[2]+col_larg[3]+col_larg[4]+col_larg[5], y, x+col_larg[0]+col_larg[1]+col_larg[2]+col_larg[3]+col_larg[4]+col_larg[5], y+(hauteur_ligne*(2+n_essai)))
+    # Dessin de lignes horizontales épaisses entre chaque vitesse
+    pdf.set_line_width(0.8)
+
+    pdf.line(x, y+(hauteur_ligne*5), x+tableau_largeur, y+(hauteur_ligne*5))
+    if type_specimen != "Regiolis ALT":
+        pdf.line(x, y+(hauteur_ligne*8), x+tableau_largeur, y+(hauteur_ligne*8))
 
     pdf.set_line_width(0.2)
-
+    
     # Remplissage de l'entête
-    pdf.multi_cell(col_larg[0], hauteur_ligne, "Entrainement \n(tr/min)", border=1, align='C')
-    pdf.set_xy(x + col_larg[0], y)
-    pdf.cell(col_larg[1] + col_larg[2] + col_larg[3], hauteur_ligne, "Défaut Balourd (mm/s)", border=1, align='C')
-    pdf.cell(col_larg[4] + col_larg[5], hauteur_ligne, "Accél. HF (m/s²)", border=1, align='C')
-    pdf.cell(col_larg[6] + col_larg[7], hauteur_ligne, "Défaut Roulement", border=1, align='C')
-    pdf.set_xy(x+col_larg[0], y+hauteur_ligne)
-    for idx,val in enumerate(["CC", "COC", "Max.", "CC", "COC", "CC", "COC"], start=1):
+    pdf.multi_cell(col_larg[0] + col_larg[1], hauteur_ligne, "Entrainement \n(tr/min)", border=1, align='C')
+    pdf.set_xy(x + col_larg[0] + col_larg[1], y)
+    pdf.cell(col_larg[2] + col_larg[3], hauteur_ligne, "CC", border=1, align='C')
+    pdf.cell(col_larg[4] + col_larg[5], hauteur_ligne, "COC", border=1, align='C')
+    pdf.set_xy(x+col_larg[0] + col_larg[1], y+hauteur_ligne)
+    for idx,val in enumerate(["Mesures", "Max.", "Mesures", "Max."], start=2):
         pdf.cell(col_larg[idx], hauteur_ligne, val, border=1, align='C')
     pdf.ln()
     
     ## Préparation des données 
     data = []
     for idx in range(n_essai):
+        # Données V
         essai = []
         essai.append(str(vitesse[idx]))
-        essai.append(str(vibr_CC[idx]/100))
-        essai.append(str(vibr_COC[idx]/100))
-        essai.append(str(vibr_toler[idx]/100))
+        essai.append("V")
+        essai.append(str(V_CC[idx]/100))
+        essai.append(str(V_toler_CC[idx]/100))
+        essai.append(str(V_COC[idx]/100))
+        essai.append(str(V_toler_COC[idx]/100))
+        if go_nogo_V[idx]:
+            essai.append("☑")
+            essai.append("☐")
+        else:
+            essai.append("☐")
+            essai.append("☑")
+        data.append(essai)
+
+        # Données AHF
+        essai = []
+        essai.append("") # Cellule vide pour décalage de la colonne vitesse
+        essai.append("AHF")
         essai.append(str(AHF_CC[idx]/100))
+        essai.append(str(AHF_toler_CC[idx]/100))
         essai.append(str(AHF_COC[idx]/100))
+        essai.append(str(AHF_toler_COC[idx]/100))
+        if go_nogo_AHF[idx]:
+            essai.append("☑")
+            essai.append("☐")
+        else:
+            essai.append("☐")
+            essai.append("☑")
+        data.append(essai)
+
+        # Données RL
+        essai = []
+        essai.append("") # Cellule vide pour décalage de la colonne vitesse
+        essai.append("RL")
         essai.append(str(RL_CC[idx]/100))
+        essai.append(str(RL_toler_CC[idx]/100))
         essai.append(str(RL_COC[idx]/100))
-        if go_nogo[idx]:
+        essai.append(str(RL_toler_COC[idx]/100))
+        if go_nogo_RL[idx]:
             essai.append("☑")
             essai.append("☐")
         else:
@@ -666,19 +697,20 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, vibr_toler, vibr_CC, vibr_COC, 
         data.append(essai)
 
     ## Création du tableau
-    for row in data:
-        # Colonnes principales
-        pdf.cell(col_larg[0], hauteur_ligne, row[0], border=1, align='C')  # Vitesse
-        pdf.cell(col_larg[1], hauteur_ligne, row[1], border=1, align='C')  # V CC
-        pdf.cell(col_larg[2], hauteur_ligne, row[2], border=1, align='C')  # V COC
-        pdf.cell(col_larg[3], hauteur_ligne, row[3], border=1, align='C')  # Tolérance
-        pdf.cell(col_larg[4], hauteur_ligne, row[4], border=1, align='C')  # AHF CC
-        pdf.cell(col_larg[5], hauteur_ligne, row[5], border=1, align='C')  # AHF COC
-        pdf.cell(col_larg[6], hauteur_ligne, row[6], border=1, align='C')  # RL CC
-        pdf.cell(col_larg[7], hauteur_ligne, row[7], border=1, align='C')  # RL COC
+    for idx,row in enumerate(data, start=0):
+        # Si idx multiple de 3 = Affichage de la colonne vitesse
+        if idx % 3 == 0:
+            pdf.cell(col_larg[0], hauteur_ligne*3, row[0], border=1, align='C')  # Vitesse
+        else:
+            pdf.cell(col_larg[0], hauteur_ligne, row[0], border=0, align='C')  # Vitesse vide et sans bordure
+        pdf.cell(col_larg[1], hauteur_ligne, row[1], border=1, align='C')  # Intitulé de mesure
+        pdf.cell(col_larg[2], hauteur_ligne, row[2], border=1, align='C')  # Valeur CC
+        pdf.cell(col_larg[3], hauteur_ligne, row[3], border=1, align='C')  # Tolérance CC
+        pdf.cell(col_larg[4], hauteur_ligne, row[4], border=1, align='C')  # Valeur COC
+        pdf.cell(col_larg[5], hauteur_ligne, row[5], border=1, align='C')  # Tolérance COC
         # Colonne Go/NoGo (sans bordure, position fixe)
         pdf.set_x(go_nogo_x)
-        pdf.print_go_nogo(row[8], row[9], hauteur_ligne)
+        pdf.print_go_nogo(row[6], row[7], hauteur_ligne)
 
     pdf.ln()
     return pdf
