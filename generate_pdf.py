@@ -653,9 +653,17 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, V_toler_CC, V_toler_COC, V_CC, 
         essai.append(str(vitesse[idx]))
         essai.append("V")
         essai.append(str(V_CC[idx]/100))
-        essai.append(str(V_toler_CC[idx]/100))
+        # Si paramètre limitant = 0 => pas d'affichage (car pas de vérification)
+        if V_toler_CC[idx] != 0:
+            essai.append(str(V_toler_CC[idx]/100))
+        else:
+            essai.append("")
         essai.append(str(V_COC[idx]/100))
-        essai.append(str(V_toler_COC[idx]/100))
+        # Si paramètre limitant = 0 => pas d'affichage (car pas de vérification)
+        if V_toler_COC[idx] != 0:
+            essai.append(str(V_toler_COC[idx]/100))
+        else:
+            essai.append("")
         if go_nogo_V[idx]:
             essai.append("☑")
             essai.append("☐")
@@ -669,9 +677,17 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, V_toler_CC, V_toler_COC, V_CC, 
         essai.append("") # Cellule vide pour décalage de la colonne vitesse
         essai.append("AHF")
         essai.append(str(AHF_CC[idx]/100))
-        essai.append(str(AHF_toler_CC[idx]/100))
+        # Si paramètre limitant = 0 => pas d'affichage (car pas de vérification)
+        if AHF_toler_CC[idx] != 0:
+            essai.append(str(AHF_toler_CC[idx]/100))
+        else:
+            essai.append("")
         essai.append(str(AHF_COC[idx]/100))
-        essai.append(str(AHF_toler_COC[idx]/100))
+        # Si paramètre limitant = 0 => pas d'affichage (car pas de vérification)
+        if AHF_toler_COC[idx] != 0:
+            essai.append(str(AHF_toler_COC[idx]/100))
+        else:
+            essai.append("")
         if go_nogo_AHF[idx]:
             essai.append("☑")
             essai.append("☐")
@@ -685,9 +701,17 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, V_toler_CC, V_toler_COC, V_CC, 
         essai.append("") # Cellule vide pour décalage de la colonne vitesse
         essai.append("RL")
         essai.append(str(RL_CC[idx]/100))
-        essai.append(str(RL_toler_CC[idx]/100))
+        # Si paramètre limitant = 0 => pas d'affichage (car pas de vérification)
+        if RL_toler_CC[idx] != 0:
+            essai.append(str(RL_toler_CC[idx]/100))
+        else:
+            essai.append("")
         essai.append(str(RL_COC[idx]/100))
-        essai.append(str(RL_toler_COC[idx]/100))
+        # Si paramètre limitant = 0 => pas d'affichage (car pas de vérification)
+        if RL_toler_COC[idx] != 0:
+            essai.append(str(RL_toler_COC[idx]/100))
+        else:
+            essai.append("")
         if go_nogo_RL[idx]:
             essai.append("☑")
             essai.append("☐")
