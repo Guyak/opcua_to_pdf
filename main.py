@@ -47,7 +47,7 @@ rapport = Dictionnaire(dict.fromkeys(rapport_liste, -1))
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Mise en place du client OPCUA
-url = credentials["serveur_url_simu"]
+url = credentials["serveur_url"]
 client = Client(url)
 client.set_user(credentials["username"])
 client.set_password(credentials["password"])

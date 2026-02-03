@@ -664,12 +664,16 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, V_toler_CC, V_toler_COC, V_CC, 
             essai.append(str(V_toler_COC[idx]/100))
         else:
             essai.append("")
-        if go_nogo_V[idx]:
-            essai.append("☑")
-            essai.append("☐")
+        if (V_toler_CC[idx] != 0) or (V_toler_COC[idx] != 0): # Si deux paramètres limitants à 0 => pas d'affichage des statuts Go/NoGo
+            if go_nogo_V[idx]:
+                essai.append("☑")
+                essai.append("☐")
+            else:
+                essai.append("☐")
+                essai.append("☑")
         else:
-            essai.append("☐")
-            essai.append("☑")
+            essai.append("")
+            essai.append("")
         data.append(essai)
 
         # Données AHF
@@ -688,12 +692,16 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, V_toler_CC, V_toler_COC, V_CC, 
             essai.append(str(AHF_toler_COC[idx]/100))
         else:
             essai.append("")
-        if go_nogo_AHF[idx]:
-            essai.append("☑")
-            essai.append("☐")
+        if (AHF_toler_CC[idx] != 0) or (AHF_toler_COC[idx] != 0): # Si deux paramètres limitants à 0 => pas d'affichage des statuts Go/NoGo
+            if go_nogo_AHF[idx]:
+                essai.append("☑")
+                essai.append("☐")
+            else:
+                essai.append("☐")
+                essai.append("☑")
         else:
-            essai.append("☐")
-            essai.append("☑")
+            essai.append("")
+            essai.append("")
         data.append(essai)
 
         # Données RL
@@ -712,12 +720,16 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, V_toler_CC, V_toler_COC, V_CC, 
             essai.append(str(RL_toler_COC[idx]/100))
         else:
             essai.append("")
-        if go_nogo_RL[idx]:
-            essai.append("☑")
-            essai.append("☐")
+        if (RL_toler_CC[idx] != 0) or (RL_toler_COC[idx] != 0): # Si deux paramètres limitants à 0 => pas d'affichage des statuts Go/NoGo
+            if go_nogo_RL[idx]:
+                essai.append("☑")
+                essai.append("☐")
+            else:
+                essai.append("☐")
+                essai.append("☑")
         else:
-            essai.append("☐")
-            essai.append("☑")
+            essai.append("")
+            essai.append("")
         data.append(essai)
 
     ## Création du tableau
