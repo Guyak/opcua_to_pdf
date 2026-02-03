@@ -47,7 +47,7 @@ rapport = Dictionnaire(dict.fromkeys(rapport_liste, -1))
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Mise en place du client OPCUA
-url = credentials["serveur_url"]
+url = credentials["serveur_url_simu"]
 client = Client(url)
 client.set_user(credentials["username"])
 client.set_password(credentials["password"])
@@ -55,8 +55,8 @@ client.session_timeout = 30000
 print(f'Connexion au serveur "{url}"...')
 try:
     client.connect()
-except (ConnectionRefusedError, TimeoutError, OSError):
-    printc(f"[red]Connexion échouée, fermeture du programme...")
+except Exception as e:
+    printc(f"[red]Connexion échouée, fermeture du programme...\nDétail de l'erreur : {type(e).__name__}")
     sys.exit(1)
 
 printc(f"[green]Connecté !\n")
@@ -263,7 +263,8 @@ try:
             time.sleep(1)
 except KeyboardInterrupt:
     printc(f"[bright_cyan]Arrêt du programme par l'utilisateur")
-    pass
+except Exception as e:
+    printc(f"[red]Erreur inattendue, fermeture du programme...\nDétail de l'erreur : {type(e).__name__}")
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Déconnexion du serveur

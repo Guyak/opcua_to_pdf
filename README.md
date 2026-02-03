@@ -41,8 +41,8 @@ py -m pip install pandas
 ```
 
 ### Complete the configuration file
-- Fill the fields of _config_opcuaEXAMPLE.json with needed informations
-- Remove EXAMPLE in the file names to get *_config_opcua.json*
+- Fill the fields of _configEXAMPLE.json with needed informations
+- Remove EXAMPLE in the file names to get *_config.json*
 
 ### Run the program
 - Run **main.py** to run the program that will call needed sub-programs to create the different test reports with [FPDF](https://py-pdf.github.io/fpdf2/index.html)
