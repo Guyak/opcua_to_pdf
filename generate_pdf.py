@@ -285,7 +285,7 @@ def print_TEMP(pdf, idx, type_specimen, temp_toler, temp_ambiante, temp_specimen
 
 def print_PHASE(pdf, idx, vitesse, go_nogo):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
-    hauteur_essai = (hauteur_texte*3)
+    hauteur_essai = (hauteur_texte*3) + (hauteur_ligne*3)
     pdf.check_break(hauteur_essai)
 
     ## Titre
@@ -294,7 +294,10 @@ def print_PHASE(pdf, idx, vitesse, go_nogo):
     pdf.set_font_texte()
 
     ## Affichage des paramètres de l'essai
-    pdf.cell(0, hauteur_texte, f"Entrainement du spécimen à {vitesse} tr/min en sens horaire", new_x="LMARGIN", new_y="NEXT")
+    # Calcul de largeur des colonnes
+    col_larg = [tableau_largeur*0.2] + [tableau_largeur*0.2] + [tableau_largeur*0.05] + [tableau_largeur*0.1] + [tableau_largeur*0.05] + [tableau_largeur*0.2] + [tableau_largeur*0.2]
+
+    pdf.cell(0, hauteur_texte, f"Entrainement du spécimen à {vitesse} tr/min en sens horaire vu côté bout d'arbre", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, hauteur_texte, f"Vérification automatique du repérage via relais de contrôle du sens de rotation")
     pdf.set_x(go_nogo_x)
     if go_nogo:
@@ -302,6 +305,56 @@ def print_PHASE(pdf, idx, vitesse, go_nogo):
     else:
         pdf.print_go_nogo("☐", "☑", hauteur_texte)
 
+    ## Affichage du tableau représentant le sens de repérage des phases
+    # Données
+    data = []
+
+    # Ligne 1
+    row = []
+    row.append("")
+    row.append("1")
+    row.append("⟶")
+    row.append("U")
+    row.append("")
+    data.append(row)
+    # Ligne 2
+    row = []
+    row.append("Contrôleur ")
+    row.append("2")
+    row.append("⟶")
+    row.append("V")
+    row.append(" Boitier spécimen")
+    data.append(row)
+    # Ligne 3
+    row = []
+    row.append("")
+    row.append("3")
+    row.append("⟶")
+    row.append("W")
+    row.append("")
+    data.append(row)
+
+    ## Dessin des données
+    [x, y] = [pdf.get_x(), pdf.get_y()] # Sauvegarde de x et y pour dessin du cadre autour du boitier moteur
+    pdf.set_line_width(1.0)
+    # Traits verticaux
+    pdf.line(x+tableau_largeur-col_larg[6], y, x+tableau_largeur-col_larg[6], y+(hauteur_ligne*3))
+    pdf.line(x+col_larg[0]+col_larg[1]+col_larg[2]+col_larg[3], y, x+col_larg[0]+col_larg[1]+col_larg[2]+col_larg[3], y+(hauteur_ligne*3))
+    # Traits horizontaux
+    pdf.line(x+col_larg[0]+col_larg[1]+col_larg[2]+col_larg[3], y, x+tableau_largeur-col_larg[6], y)
+    pdf.line(x+col_larg[0]+col_larg[1]+col_larg[2]+col_larg[3], y+(hauteur_ligne*3), x+tableau_largeur-col_larg[6], y+(hauteur_ligne*3))
+    pdf.set_line_width(0.2)
+    # Affichage du tableau
+    for row in data:
+            pdf.cell(col_larg[0], hauteur_ligne, "", border=0, align='C')  # Vide à gauche
+            pdf.cell(col_larg[1], hauteur_ligne, row[0], border=0, align='R')  # "Contrôleur"
+            pdf.cell(col_larg[2], hauteur_ligne, row[1], border=0, align='C')  # Numéro
+            pdf.set_font("DejaVu", size=18)
+            pdf.cell(col_larg[3], hauteur_ligne, row[2], border=0, align='C')  # Flèche
+            pdf.set_font_texte()
+            pdf.cell(col_larg[4], hauteur_ligne, row[3], border=0, align='C')  # Lettre
+            pdf.cell(col_larg[5], hauteur_ligne, row[4], border=0, align='L')  # "Boitier moteur"
+            pdf.ln()
     pdf.ln()
     return(pdf)
 
@@ -459,7 +512,7 @@ def print_SYNCHRO(pdf, idx, type_specimen, vitesse, vitesse_toler, sequence_ok, 
 
         # Dessin de flèche entre les deux zones de texte
         [x, y] = [pdf.get_x(), pdf.get_y()]
-        [x_0, y_0, x_1] = [pdf.get_x()+4, pdf.get_y()+(hauteur_texte/2), pdf.get_x()+(tableau_largeur/6)-3]
+        [x_0, y_0, x_1] = [x+4, y+(hauteur_texte/2), x+(tableau_largeur/6)-3]
         # Ligne horizontale
         pdf.line(x_0, y_0, x_1, y_0)
         # Pointe de flèche (triangle)
