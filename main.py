@@ -47,7 +47,7 @@ rapport = Dictionnaire(dict.fromkeys(rapport_liste, -1))
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Mise en place du client OPCUA
-url = credentials["serveur_url"]
+url = credentials["serveur_url_simu"]
 client = Client(url)
 client.set_user(credentials["username"])
 client.set_password(credentials["password"])
@@ -64,14 +64,21 @@ printc(f"[green]Connecté !\n")
 ##————————————————————————————————————————————————————————————————————————————##
 ## Lecture/Ecriture des valeurs du serveur et génération de rapport
 API_Lecture = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Lecture')
+API_Lecture_Mem = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Lecture_Mem')
 API_Redaction_En_Cours = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Redaction_En_Cours')
 
 print(f"Appuyer sur CTRL-C pour arrêter le programme\n")
 printc(f'[yellow]Attente de demande d\'écriture...\n')
 try:
     while True:
-        if API_Lecture.get_value():
+        Lecture_Essai = API_Lecture.get_value()
+        Lecture_Mem = API_Lecture_Mem.get_value()
+        if Lecture_Essai or Lecture_Mem:
             ## Validation de la demande de rédaction
+            if Lecture_Essai:
+                printc(f'[bright_cyan]--- Début de la rédaction du rapport (mode Essai en Cours) ---\n')
+            if Lecture_Mem:
+                printc(f'[bright_cyan]--- Début de la rédaction du rapport (mode Essai Mémorisé) ---\n')
             API_Redaction_En_Cours.set_value(ua.DataValue(ua.Variant(True, ua.VariantType.Boolean)))
 
             ##———————————————————————————————————————————————————————————————##
@@ -206,20 +213,21 @@ try:
                                     rapport.GEN_Sortie_Limite_Couple, recette.GEN_Limite_Couple, rapport.GEN_Sortie_Erreur_Comm)
             printc(f'[green]OK\n')
 
-            ## Sauvegarde des paramètres dans un fichier CSV
-            chemin = f'{credentials["root"]}\\{rapport.GEN_Type_Specimen}'
-            os.makedirs(chemin, exist_ok=True) # exist_ok = True permet d'ignorer la commande si le dossier existe déjà
-            printc(f"[bright_cyan]Remplissage du fichier CSV au chemin {chemin} ...")
-            # Ajout de l'en-tête "Recette" et "Rapport" pour aider à la lecture
-            dict_recette = {f"Recette.{k}": v for k, v in recette._data.items()}
-            dict_rapport = {f"Rapport.{k}": v for k, v in rapport._data.items()}
-            # Union des deux dictionnaires
-            dict_param = dict_recette | dict_rapport
-            # Appel de fonction avec exclusion des clés devant rester au début du fichier
-            exclusions = ["Rapport.GEN_Type_Specimen", "Rapport.GEN_Ref_Specimen", "Rapport.GEN_Symbole_Specimen", "Rapport.GEN_Num_Serie", 
-                        "Rapport.GEN_Nom_Operateur", "Rapport.GEN_Ordre_Essais", "Rapport.GEN_AUTO", "Rapport.GEN_SEMI_AUTO"]
-            dict_to_csv(f'{chemin}\\datas_{rapport.GEN_Type_Specimen}.csv', dict_param, exclusions)
-            printc(f'[green]OK\n')
+            if Lecture_Essai:
+                ## Sauvegarde des paramètres dans un fichier CSV
+                chemin = f'{credentials["root"]}\\{rapport.GEN_Type_Specimen}'
+                os.makedirs(chemin, exist_ok=True) # exist_ok = True permet d'ignorer la commande si le dossier existe déjà
+                printc(f"[bright_cyan]Remplissage du fichier CSV au chemin {chemin} ...")
+                # Ajout de l'en-tête "Recette" et "Rapport" pour aider à la lecture
+                dict_recette = {f"Recette.{k}": v for k, v in recette._data.items()}
+                dict_rapport = {f"Rapport.{k}": v for k, v in rapport._data.items()}
+                # Union des deux dictionnaires
+                dict_param = dict_recette | dict_rapport
+                # Appel de fonction avec exclusion des clés devant rester au début du fichier
+                exclusions = ["Rapport.GEN_Type_Specimen", "Rapport.GEN_Ref_Specimen", "Rapport.GEN_Symbole_Specimen", "Rapport.GEN_Num_Serie", 
+                            "Rapport.GEN_Nom_Operateur", "Rapport.GEN_Ordre_Essais", "Rapport.GEN_AUTO", "Rapport.GEN_SEMI_AUTO"]
+                dict_to_csv(f'{chemin}\\datas_{rapport.GEN_Type_Specimen}.csv', dict_param, exclusions)
+                printc(f'[green]OK\n')
 
             ## Génération du rapport
             # Création de dossier basé sur le type de spécimen et toutes les informations relatives à l'essai
@@ -236,7 +244,10 @@ try:
                 id_essai += 'GO'
             else:
                 id_essai += "_NOGO"
-            chemin = f'{credentials["root"]}\\{rapport.GEN_Type_Specimen}\\{rapport.GEN_Symbole_Specimen}\\' + id_essai
+            if Lecture_Essai:
+                chemin = f'{credentials["root"]}\\{rapport.GEN_Type_Specimen}\\{rapport.GEN_Symbole_Specimen}\\' + id_essai
+            if Lecture_Mem:
+                chemin = f'{credentials["root"]}\\_Rééditions\\'
             os.makedirs(chemin, exist_ok=True)
             printc(f"[bright_cyan]Création du PDF...\nChemin : {chemin}")
             nom_pdf = id_essai + f'.pdf'
@@ -244,18 +255,20 @@ try:
             printc(f'[green]OK\n')
             os.startfile(f'{chemin}\\{nom_pdf}')
 
-            ## Copie des mesures effectuées par le MV-x dans le dossier du rapport
-            dest_mvx = chemin + f"\\MVx"
-            src_mvx = "C:\\SftpRoot\\var\\mvx\\Measurements"
-            printc(f"[bright_cyan]Déplacement des mesures effectuées par le MV-x...\nChemin : {dest_mvx}")
-            try:
-                move_acoem_mesures(src_mvx, dest_mvx)
-                printc(f'[green]OK     \n')
-            except FileNotFoundError:
-                printc(f"[red]Dossier [{src_mvx}] inexistant, rien n'a été déplacé\n")
+            if Lecture_Essai:
+                ## Copie des mesures effectuées par le MV-x dans le dossier du rapport
+                dest_mvx = chemin + f"\\MVx"
+                src_mvx = "C:\\SftpRoot\\var\\mvx\\Measurements"
+                printc(f"[bright_cyan]Déplacement des mesures effectuées par le MV-x...\nChemin : {dest_mvx}")
+                try:
+                    move_acoem_mesures(src_mvx, dest_mvx)
+                    printc(f'[green]OK     \n')
+                except FileNotFoundError:
+                    printc(f"[red]Dossier [{src_mvx}] inexistant, rien n'a été déplacé\n")
 
             ## Remise à 0 du bit de lecture
             API_Lecture.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+            API_Lecture_Mem.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
             API_Redaction_En_Cours.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
 
             printc(f'[yellow]Attente de demande d\'écriture...\n')
