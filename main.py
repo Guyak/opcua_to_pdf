@@ -47,7 +47,7 @@ rapport = Dictionnaire(dict.fromkeys(rapport_liste, -1))
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Mise en place du client OPCUA
-url = credentials["serveur_url_simu"]
+url = credentials["serveur_url"]
 client = Client(url)
 client.set_user(credentials["username"])
 client.set_password(credentials["password"])
@@ -76,9 +76,9 @@ try:
         if Lecture_Essai or Lecture_Mem:
             ## Validation de la demande de rédaction
             if Lecture_Essai:
-                printc(f'[bright_cyan]--- Début de la rédaction du rapport (mode Essai en Cours) ---\n')
+                printc(f'[bright_magenta]--- Début de la rédaction du rapport (mode Essai en Cours) ---\n')
             if Lecture_Mem:
-                printc(f'[bright_cyan]--- Début de la rédaction du rapport (mode Essai Mémorisé) ---\n')
+                printc(f'[bright_magenta]--- Début de la rédaction du rapport (mode Essai Mémorisé) ---\n')
             API_Redaction_En_Cours.set_value(ua.DataValue(ua.Variant(True, ua.VariantType.Boolean)))
 
             ##———————————————————————————————————————————————————————————————##
