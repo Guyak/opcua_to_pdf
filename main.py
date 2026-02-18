@@ -47,19 +47,31 @@ rapport = Dictionnaire(dict.fromkeys(rapport_liste, -1))
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Mise en place du client OPCUA
+def validation_connection(client):
+    statut_connection = False
+    erreur_vue = False
+    compte_boucle = 0
+    while not statut_connection:
+        try:
+            client.connect()
+            statut_connection = True
+            printc(f"\n[green]Connecté !\n")
+            return client
+        except Exception as e:
+            compte_boucle += 1
+            if not erreur_vue:
+                printc(f"\n[red]Connexion échouée...\nDétail de l'erreur : {type(e).__name__}")
+                erreur_vue = True
+            printc(f"[yellow]Attente de connection ({compte_boucle})...", end="\r")
+            time.sleep(1)
+
 url = credentials["serveur_url"]
 client = Client(url)
 client.set_user(credentials["username"])
 client.set_password(credentials["password"])
 client.session_timeout = 30000
 print(f'Connexion au serveur "{url}"...')
-try:
-    client.connect()
-except Exception as e:
-    printc(f"[red]Connexion échouée, fermeture du programme...\nDétail de l'erreur : {type(e).__name__}")
-    sys.exit(1)
-
-printc(f"[green]Connecté !\n")
+client = validation_connection(client)
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Lecture/Ecriture des valeurs du serveur et génération de rapport
@@ -67,12 +79,18 @@ API_Lecture = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Lecture')
 API_Lecture_Mem = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Lecture_Mem')
 API_Redaction_En_Cours = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Redaction_En_Cours')
 
+IHM_Test_Ping = client.get_node(f'ns=2;s=Local HMI.Tags.Ping.PC_Ping')
+IHM_Valeur_Tot = client.get_node(f'ns=2;s=Local HMI.Tags.Chargement.Valeur_Tot')
+IHM_Valeur_Actu = client.get_node(f'ns=2;s=Local HMI.Tags.Chargement.Valeur_Actu')
+
 print(f"Appuyer sur CTRL-C pour arrêter le programme\n")
 printc(f'[yellow]Attente de demande d\'écriture...\n')
-try:
-    while True:
+
+while True:
+    try:
         Lecture_Essai = API_Lecture.get_value()
         Lecture_Mem = API_Lecture_Mem.get_value()
+        Get_Ping = IHM_Test_Ping.get_value()
         if Lecture_Essai or Lecture_Mem:
             ## Validation de la demande de rédaction
             if Lecture_Essai:
@@ -92,20 +110,27 @@ try:
                 #Lecture uniquement pour l'essai à faire
                 recette_filtre = [item for item in recette_liste if ("GEN" in item) or ("VIBR" in item)]
                 rapport_filtre = [item for item in rapport_liste if ("GEN" in item) or ("VIBR" in item)]
+            IHM_Valeur_Tot.set_value(ua.DataValue(ua.Variant(len(recette_filtre)+len(rapport_filtre), ua.VariantType.UInt16)))
+
             ##———————————————————————————————————————————————————————————————##
 
             ## Récupération des valeurs
             # Recette
             printc(f'[bright_cyan]Récupération des paramètres de recette...')
+            parcours_actu = 0
             for idx,i in enumerate(recette_filtre, start=1):
                 print(f"{idx}/{len(recette_filtre)}", end="\r")
                 setattr(recette, i, client.get_node(f'ns=2;s=API_425056.Tags.Recette.{i}').get_value())
+                parcours_actu += 1
+                IHM_Valeur_Actu.set_value(ua.DataValue(ua.Variant(int(parcours_actu), ua.VariantType.UInt16)))
             printc(f'[green]OK     ')
             # Résultats
             printc(f'[bright_cyan]Récupération des résultats des essais...')
             for idx,i in enumerate(rapport_filtre, start=1):
                 print(f"{idx}/{len(rapport_filtre)}", end="\r")
                 setattr(rapport, i, client.get_node(f'ns=2;s=API_425056.Tags.Rapport.{i}').get_value())
+                parcours_actu += 1
+                IHM_Valeur_Actu.set_value(ua.DataValue(ua.Variant(parcours_actu, ua.VariantType.UInt16)))
             printc(f'[green]OK     \n')
 
             ## Création du fichier PDF
@@ -272,14 +297,27 @@ try:
             API_Redaction_En_Cours.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
 
             printc(f'[yellow]Attente de demande d\'écriture...\n')
+        elif Get_Ping:
+            time.sleep(1)
+            IHM_Test_Ping.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+            printc(f"Ping IHM valide\n")
         else:
             time.sleep(1)
-except KeyboardInterrupt:
-    printc(f"[bright_cyan]Arrêt du programme par l'utilisateur")
-except Exception as e:
-    printc(f"[red]Erreur inattendue, fermeture du programme...\nDétail de l'erreur : {type(e).__name__}")
+    except KeyboardInterrupt:
+        printc(f"[bright_cyan]Arrêt du programme par l'utilisateur")
+        break
+    except Exception as e:
+        printc(f"[red]Erreur inattendue, détail de l'erreur : {type(e).__name__}")
+        time.sleep(1)
+        client.close_session()
+        printc(f'[yellow]Reconnexion au serveur OPCUA...')
+        client = validation_connection(client)
+        printc(f'[yellow]Attente de demande d\'écriture...\n')
+
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Déconnexion du serveur
 client.disconnect()
+client.close_session()
 printc(f"[bright_cyan]Déconnecté")
+sys.exit(1)
