@@ -47,14 +47,25 @@ rapport = Dictionnaire(dict.fromkeys(rapport_liste, -1))
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Mise en place du client OPCUA
-def validation_connection(client):
-    statut_connection = False
+def creer_client(credentials):
+    url = credentials["serveur_url_simu"]
+    client = Client(url)
+    client.set_user(credentials["username"])
+    client.set_password(credentials["password"])
+    client.session_timeout = 30000  # ms
+    print(f'Connexion au serveur "{url}"...')
+    return client, url
+
+def validation_connexion(client):
+    # Init utiles
+    statut_connexion = False
     erreur_vue = False
     compte_boucle = 0
-    while not statut_connection:
+    # Boucles de tentatives de connexion
+    while not statut_connexion:
         try:
             client.connect()
-            statut_connection = True
+            statut_connexion = True
             printc(f"\n[green]Connecté !\n")
             return client
         except Exception as e:
@@ -62,26 +73,45 @@ def validation_connection(client):
             if not erreur_vue:
                 printc(f"\n[red]Connexion échouée...\nDétail de l'erreur : {type(e).__name__}")
                 erreur_vue = True
-            printc(f"[yellow]Attente de connection ({compte_boucle})...", end="\r")
-            time.sleep(1)
+            printc(f"[yellow]Attente de connexion ({compte_boucle})...", end="\r")
+            if compte_boucle < 10:
+                time.sleep(1)
+            elif compte_boucle < 50:
+                time.sleep(5)
+            else:
+                time.sleep(10)
 
-url = credentials["serveur_url"]
-client = Client(url)
-client.set_user(credentials["username"])
-client.set_password(credentials["password"])
-client.session_timeout = 30000
-print(f'Connexion au serveur "{url}"...')
-client = validation_connection(client)
+def reconnexion_client(client, credentials):
+    # Fermeture propre de l'ancien client
+    try:
+        client.disconnect()
+    except Exception as e:
+        # On log juste, pas bloquant
+        printc(f"[red]Erreur lors de la fermeture de la connexion OPCUA : {type(e).__name__}")
+    # Nouveau client
+    nouveau_client, url = creer_client(credentials)
+    # Connexion avec retry
+    nouveau_client = validation_connexion(nouveau_client)
+    return nouveau_client
+
+def init_nodes(client):
+    API_Lecture = client.get_node('ns=2;s=API_425056.Tags.Commande_PC.Lecture')
+    API_Lecture_Mem = client.get_node('ns=2;s=API_425056.Tags.Commande_PC.Lecture_Mem')
+    API_Redaction_En_Cours = client.get_node('ns=2;s=API_425056.Tags.Commande_PC.Redaction_En_Cours')
+
+    IHM_Test_Ping = client.get_node('ns=2;s=Local HMI.Tags.Ping.PC_Ping')
+    IHM_Valeur_Tot = client.get_node('ns=2;s=Local HMI.Tags.Chargement.Valeur_Tot')
+    IHM_Valeur_Actu = client.get_node('ns=2;s=Local HMI.Tags.Chargement.Valeur_Actu')
+
+    return (API_Lecture, API_Lecture_Mem, API_Redaction_En_Cours, IHM_Test_Ping, IHM_Valeur_Tot, IHM_Valeur_Actu)
+
+# Création + connexion cliente OPC UA
+client, url = creer_client(credentials)
+client = validation_connexion(client)
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Lecture/Ecriture des valeurs du serveur et génération de rapport
-API_Lecture = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Lecture')
-API_Lecture_Mem = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Lecture_Mem')
-API_Redaction_En_Cours = client.get_node(f'ns=2;s=API_425056.Tags.Commande_PC.Redaction_En_Cours')
-
-IHM_Test_Ping = client.get_node(f'ns=2;s=Local HMI.Tags.Ping.PC_Ping')
-IHM_Valeur_Tot = client.get_node(f'ns=2;s=Local HMI.Tags.Chargement.Valeur_Tot')
-IHM_Valeur_Actu = client.get_node(f'ns=2;s=Local HMI.Tags.Chargement.Valeur_Actu')
+(API_Lecture, API_Lecture_Mem, API_Redaction_En_Cours, IHM_Test_Ping, IHM_Valeur_Tot, IHM_Valeur_Actu) = init_nodes(client)
 
 print(f"Appuyer sur CTRL-C pour arrêter le programme\n")
 printc(f'[yellow]Attente de demande d\'écriture...\n')
@@ -309,15 +339,18 @@ while True:
     except Exception as e:
         printc(f"[red]Erreur inattendue, détail de l'erreur : {type(e).__name__}")
         time.sleep(1)
-        client.close_session()
         printc(f'[yellow]Reconnexion au serveur OPCUA...')
-        client = validation_connection(client)
+        # Reconnexion complète
+        client = reconnexion_client(client, credentials)
+        # Réinitialisation des nodes avec le nouveau client
+        (API_Lecture, API_Lecture_Mem, API_Redaction_En_Cours, IHM_Test_Ping, IHM_Valeur_Tot, IHM_Valeur_Actu) = init_nodes(client)
         printc(f'[yellow]Attente de demande d\'écriture...\n')
-
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Déconnexion du serveur
-client.disconnect()
-client.close_session()
+try:
+    client.disconnect()
+except Exception:
+    pass
 printc(f"[bright_cyan]Déconnecté")
-sys.exit(1)
+sys.exit(0)
