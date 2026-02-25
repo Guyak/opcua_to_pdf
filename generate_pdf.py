@@ -804,7 +804,7 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, V_toler_CC, V_toler_COC, V_CC, 
     pdf.ln()
     return pdf
 
-def print_SORTIE(pdf, gemma_nogo, gemma_AFCY, def_AU, def_portes, def_carter, def_couple, lim_couple, def_comm):
+def print_SORTIE(pdf, gemma_nogo, gemma_AFCY, def_AU, def_portes, def_carter, def_couple, lim_couple, def_comm, def_general):
     if gemma_nogo:
         # Si NoGo, affichage d'un message unique
         message = f"NoGo sur le dernier essai effectué"
@@ -820,6 +820,8 @@ def print_SORTIE(pdf, gemma_nogo, gemma_AFCY, def_AU, def_portes, def_carter, de
             message = f"Dépassement de la limite de couple du moteur d'entrainement ({lim_couple}%)"
         elif def_comm:
             message = f"Perte de la communication d'un équipement réseau"
+        elif def_general:
+            message = f"Défaut général détecté sur l'automate (voir IHM)"
         else:
             message = f"Demande d'arrêt par l'opérateur"
         message += f" - Arrêt des essais"

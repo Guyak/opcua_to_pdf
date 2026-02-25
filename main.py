@@ -48,7 +48,7 @@ rapport = Dictionnaire(dict.fromkeys(rapport_liste, -1))
 ##————————————————————————————————————————————————————————————————————————————##
 ## Mise en place du client OPCUA
 def creer_client(credentials):
-    url = credentials["serveur_url_simu"]
+    url = credentials["serveur_url"]
     client = Client(url)
     client.set_user(credentials["username"])
     client.set_password(credentials["password"])
@@ -265,7 +265,7 @@ while True:
             # Affichage de la raison de l'arrêt de l'essai en cas d'arrêt prématuré
             pdf = print_SORTIE(pdf, rapport.GEN_Entree_Etape_11, rapport.GEN_Entree_Etape_10, 
                                     rapport.GEN_Sortie_AU, rapport.GEN_Sortie_Portes, rapport.GEN_Sortie_Carter, 
-                                    rapport.GEN_Sortie_Limite_Couple, recette.GEN_Limite_Couple, rapport.GEN_Sortie_Erreur_Comm)
+                                    rapport.GEN_Sortie_Limite_Couple, recette.GEN_Limite_Couple, rapport.GEN_Sortie_Erreur_Comm, rapport.GEN_Sortie_Defaut_General)
             printc(f'[green]OK\n')
 
             if Lecture_Essai:
@@ -296,7 +296,7 @@ while True:
                 id_essai += '_SEMIAUTO'
             # + Résultat essai
             if rapport.GEN_Go:
-                id_essai += 'GO'
+                id_essai += '_GO'
             else:
                 id_essai += "_NOGO"
             if Lecture_Essai:
