@@ -2,7 +2,7 @@
 Get values from an OPCUA server  and convert these to a PDF file
 
 ## Run
-The following steps are used to run the program with **Windows 10** command bash
+The following steps are used to run the program with **Windows 10 or 11** command bash
 
 ### Install the lastest python version
 - Install the last version on [Python website](https://www.python.org/downloads/)
@@ -45,9 +45,9 @@ py -m pip install pandas
 - Remove EXAMPLE in the file names to get *_config.json*
 
 ### Run the program
+- Run **encryption_MDP.py** to generate the *_config.enc* file that will contain the password for your OPCUA session (see *_configEXAMPLE.enc*)
 - Run **main.py** to run the program that will call needed sub-programs to create the different test reports with [FPDF](https://py-pdf.github.io/fpdf2/index.html)
 ```bash
 py ./main.py
 ```
 - It is also possible to double-click on **run_prog.bat** to start the program without entering the terminal
-
