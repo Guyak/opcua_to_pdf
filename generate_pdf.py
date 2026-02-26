@@ -1,4 +1,5 @@
 from fpdf import FPDF
+from util_pyinstaller import *
 import time
 import os
 
@@ -39,8 +40,8 @@ class PDF(FPDF):
     def header(self):
         # Logo
         y = self.get_y()
-        self.image("./_images/GS.png", 10,5,30)
-        self.image("./_images/SNCF.png", 13,20,22)
+        self.image(resource_path("_images/GS.png"), 10,5,30)
+        self.image(resource_path("_images/SNCF.png"), 13,20,22)
         # Police titre
         self.set_font("helvetica", style="B", size=12)
         self.set_y(y)
@@ -93,7 +94,7 @@ class PDF(FPDF):
 
 def init_pdf(type_specimen, ref_specimen, symbole_specimen, serie_specimen, nom_operateur, go_essai):
     pdf = PDF(type=type_specimen, reference=ref_specimen, symbole=symbole_specimen, serie=serie_specimen, operateur=nom_operateur, go=go_essai)
-    pdf.add_font('DejaVu', '', './_fonts/DejaVuSans.ttf', uni=True)
+    pdf.add_font('DejaVu', '', resource_path('_fonts/DejaVuSans.ttf'), uni=True)
     pdf.add_page()
     pdf.set_font_texte()
     return pdf

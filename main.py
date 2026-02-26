@@ -1,22 +1,34 @@
 from opcua import Client, ua
+from cryptography.fernet import Fernet
 from json import load as j_load
 from fpdf import FPDF
 from rich import print as printc
 from generate_pdf import *
 from csv_append import *
 from acoem_copy import *
+from util_pyinstaller import *
 import time
 import sys
 import os
 
 ##————————————————————————————————————————————————————————————————————————————##
-## Extraction des fichiers de configuration
-config_file = "_config.json"
+## Extraction des fichiers JSON de configuration
+config_file = resource_path("_config.json")
 with open(config_file) as file:
     credentials = j_load(file)
-config_file = "_config_listes.json"
+config_file = resource_path("_config_listes.json")
 with open(config_file) as file:
     listes_param = j_load(file)
+
+## Chargement et décryptage du MDP
+encrypt_file = resource_path("_key.bin")
+with open(encrypt_file, "rb") as file:
+    key = file.read()
+cipher = Fernet(key)
+encrypt_file = "./_config.enc" # Doit être stocké sur le PC (lecture protégée par droits Windows) pour être modifiable en cas de demande de changement
+with open(encrypt_file, "r") as file:
+    cfg = j_load(file)
+password = cipher.decrypt(cfg["password_enc"].encode()).decode()
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Creation des dictionnaires
@@ -47,11 +59,11 @@ rapport = Dictionnaire(dict.fromkeys(rapport_liste, -1))
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Mise en place du client OPCUA
-def creer_client(credentials):
+def creer_client(credentials, password):
     url = credentials["serveur_url"]
     client = Client(url)
     client.set_user(credentials["username"])
-    client.set_password(credentials["password"])
+    client.set_password(password)
     client.session_timeout = 30000  # ms
     print(f'Connexion au serveur "{url}"...')
     return client, url
@@ -89,7 +101,7 @@ def reconnexion_client(client, credentials):
         # On log juste, pas bloquant
         printc(f"[red]Erreur lors de la fermeture de la connexion OPCUA : {type(e).__name__}")
     # Nouveau client
-    nouveau_client, url = creer_client(credentials)
+    nouveau_client, url = creer_client(credentials, password)
     # Connexion avec retry
     nouveau_client = validation_connexion(nouveau_client)
     return nouveau_client
@@ -106,7 +118,7 @@ def init_nodes(client):
     return (API_Lecture, API_Lecture_Mem, API_Redaction_En_Cours, IHM_Test_Ping, IHM_Valeur_Tot, IHM_Valeur_Actu)
 
 # Création + connexion cliente OPC UA
-client, url = creer_client(credentials)
+client, url = creer_client(credentials, password)
 client = validation_connexion(client)
 
 ##————————————————————————————————————————————————————————————————————————————##
@@ -280,7 +292,7 @@ while True:
                 dict_param = dict_recette | dict_rapport
                 # Appel de fonction avec exclusion des clés devant rester au début du fichier
                 exclusions = ["Rapport.GEN_Type_Specimen", "Rapport.GEN_Ref_Specimen", "Rapport.GEN_Symbole_Specimen", "Rapport.GEN_Num_Serie", 
-                            "Rapport.GEN_Nom_Operateur", "Rapport.GEN_Ordre_Essais", "Rapport.GEN_AUTO", "Rapport.GEN_SEMI_AUTO"]
+                            "Rapport.GEN_Go", "Rapport.GEN_Nom_Operateur", "Rapport.GEN_Ordre_Essais", "Rapport.GEN_AUTO", "Rapport.GEN_SEMI_AUTO"]
                 dict_to_csv(f'{chemin}\\datas_{rapport.GEN_Type_Specimen}.csv', dict_param, exclusions)
                 printc(f'[green]OK\n')
 

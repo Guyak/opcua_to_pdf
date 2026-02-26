@@ -169,3 +169,6 @@ _config*.json
 *.pdf
 !*EXAMPLE.pdf
 *.csv
+*.enc
+__executables/
+*.ico
