@@ -160,15 +160,12 @@ cython_debug/
 #.idea/
 
 # Personal
-_config*.json
-!_config_listes.json
-!_config*EXAMPLE.json
+_config.json
 *.bak*
 *.debug
 *.cxob
 *.pdf
 !*EXAMPLE.pdf
 *.csv
-*.enc
 __executables/
 *.ico
