@@ -46,6 +46,9 @@ py -m pip install pandas
 
 ### Run the program
 - Run **encryption_MDP.py** to generate the *_config.enc* file that will contain the password for your OPCUA session (see *_configEXAMPLE.enc*)
+```bash
+py ./encryption_MDP.py
+```
 - Run **main.py** to run the program that will call needed sub-programs to create the different test reports with [FPDF](https://py-pdf.github.io/fpdf2/index.html)
 ```bash
 py ./main.py
