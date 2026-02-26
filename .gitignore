@@ -160,7 +160,7 @@ cython_debug/
 #.idea/
 
 # Personal
-_config.json
+_config.*
 *.bak*
 *.debug
 *.cxob
