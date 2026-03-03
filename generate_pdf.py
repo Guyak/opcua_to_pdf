@@ -298,8 +298,8 @@ def print_PHASE(pdf, idx, vitesse, go_nogo):
     # Calcul de largeur des colonnes
     col_larg = [tableau_largeur*0.2] + [tableau_largeur*0.2] + [tableau_largeur*0.05] + [tableau_largeur*0.1] + [tableau_largeur*0.05] + [tableau_largeur*0.2] + [tableau_largeur*0.2]
 
-    pdf.cell(0, hauteur_texte, f"Entrainement du spécimen à {vitesse} tr/min en sens horaire vu côté bout d'arbre", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, hauteur_texte, f"Vérification automatique du repérage via relais de contrôle du sens de rotation")
+    pdf.cell(0, hauteur_texte, f"Entrainement du spécimen à {vitesse} tr/min en sens horaire vu côté bout d'arbre.", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"Vérification automatique du repérage via relais de contrôle du sens de rotation.")
     pdf.set_x(go_nogo_x)
     if go_nogo:
         pdf.print_go_nogo("☑", "☐", hauteur_texte)
@@ -534,7 +534,7 @@ def print_SYNCHRO(pdf, idx, type_specimen, vitesse, vitesse_toler, sequence_ok, 
         
         ## Affichage du contrôle de positionnement du synchro-résolveur
         # Titre
-        pdf.cell(0, hauteur_texte, "Contrôle positionnement synchro-résolveur :", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, hauteur_texte, "Contrôle de positionnement du capteur de vitesse :", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
         # En-tête du tableau
         col_larg = [tableau_largeur / 4] * 4
 
@@ -607,7 +607,7 @@ def print_SYNCHRO(pdf, idx, type_specimen, vitesse, vitesse_toler, sequence_ok, 
 
         ## Affichage du contrôle du Delta T
         # Titre
-        pdf.cell(0, hauteur_texte, "Contrôle positionnement synchro-résolveur :", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, hauteur_texte, "Contrôle de positionnement du synchro-résolveur :", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
 
         # En-tête
         col_larg = tableau_largeur / 2
@@ -628,7 +628,7 @@ def print_SYNCHRO(pdf, idx, type_specimen, vitesse, vitesse_toler, sequence_ok, 
 
 def print_SURVIT(pdf, idx, vitesse, duree_essai, vitesse_arret, vibration, vibration_toler, go, nogo):
     ## Définition de la hauteur de l'essai, si position en bas de la page supérieure à la hauteur de l'essai => saut de page
-    hauteur_essai = (hauteur_texte*3)
+    hauteur_essai = (hauteur_texte*4)
     if nogo:
         hauteur_essai += hauteur_texte
     pdf.check_break(hauteur_essai)
