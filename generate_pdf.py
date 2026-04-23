@@ -202,7 +202,7 @@ def print_ISOL(pdf, idx, bobinage_min, res_bobinage, bobinage_ok, paliers_min, r
         essai.append("☐")
         essai.append("☑")
     data.append(essai)
-    essai = ["Paliers", f"{res_paliers/1000} MΩ", f"{paliers_min/1000} MΩ"]
+    essai = ["Paliers", f"{res_paliers/1000} GΩ", f"{paliers_min/1000} GΩ"]
     if paliers_ok:
         essai.append("☑")
         essai.append("☐")
