@@ -7,9 +7,11 @@ from generate_pdf import *
 from csv_append import *
 from acoem_copy import *
 from util_pyinstaller import *
+from capture_fenetre import *
 import time
 import sys
 import os
+import shutil
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Extraction des fichiers JSON de configuration
@@ -110,12 +112,13 @@ def init_nodes(client):
     API_Lecture = client.get_node('ns=2;s=API_425056.Tags.Commande_PC.Lecture')
     API_Lecture_Mem = client.get_node('ns=2;s=API_425056.Tags.Commande_PC.Lecture_Mem')
     API_Redaction_En_Cours = client.get_node('ns=2;s=API_425056.Tags.Commande_PC.Redaction_En_Cours')
+    API_Capture_Pico = client.get_node('ns=2;s=API_425056.Tags.Commande_PC.Capture_Pico')
 
     IHM_Test_Ping = client.get_node('ns=2;s=Local HMI.Tags.Ping.PC_Ping')
     IHM_Valeur_Tot = client.get_node('ns=2;s=Local HMI.Tags.Chargement.Valeur_Tot')
     IHM_Valeur_Actu = client.get_node('ns=2;s=Local HMI.Tags.Chargement.Valeur_Actu')
 
-    return (API_Lecture, API_Lecture_Mem, API_Redaction_En_Cours, IHM_Test_Ping, IHM_Valeur_Tot, IHM_Valeur_Actu)
+    return (API_Lecture, API_Lecture_Mem, API_Redaction_En_Cours, API_Capture_Pico, IHM_Test_Ping, IHM_Valeur_Tot, IHM_Valeur_Actu)
 
 # Création + connexion cliente OPC UA
 client, url = creer_client(credentials, password)
@@ -123,7 +126,8 @@ client = validation_connexion(client)
 
 ##————————————————————————————————————————————————————————————————————————————##
 ## Lecture/Ecriture des valeurs du serveur et génération de rapport
-(API_Lecture, API_Lecture_Mem, API_Redaction_En_Cours, IHM_Test_Ping, IHM_Valeur_Tot, IHM_Valeur_Actu) = init_nodes(client)
+(API_Lecture, API_Lecture_Mem, API_Redaction_En_Cours, API_Capture_Pico, IHM_Test_Ping, IHM_Valeur_Tot, IHM_Valeur_Actu) = init_nodes(client)
+picoscope_capture = False
 
 print(f"Appuyer sur CTRL-C pour arrêter le programme\n")
 printc(f'[yellow]Attente de demande d\'écriture...\n')
@@ -133,6 +137,8 @@ while True:
         Lecture_Essai = API_Lecture.get_value()
         Lecture_Mem = API_Lecture_Mem.get_value()
         Get_Ping = IHM_Test_Ping.get_value()
+        Get_Screenshot_Picoscope = API_Capture_Pico.get_value()
+
         if Lecture_Essai or Lecture_Mem:
             ## Validation de la demande de rédaction
             if Lecture_Essai:
@@ -319,8 +325,19 @@ while True:
             printc(f"[bright_cyan]Création du PDF...\nChemin : {chemin}")
             nom_pdf = id_essai + f'.pdf'
             pdf.output(f'{chemin}\\{nom_pdf}')
-            printc(f'[green]OK\n')
+            printc(f'[green]OK')
             os.startfile(f'{chemin}\\{nom_pdf}')
+            
+            if picoscope_capture:
+                ## Déplacement de la capture d'écran du Picoscope dans le dossier final
+                printc(f"[bright_cyan]Récupération de la capture d'écran du Picoscope...")
+                if os.path.exists(path_capture_temp):
+                    shutil.move(path_capture_temp, chemin)
+                    printc(f'[green]OK')
+                else:
+                    printc(f"[red]Capture d'écran introuvable")
+                picoscope_capture = False
+            print(" ")
 
             if Lecture_Essai:
                 ## Copie des mesures effectuées par le MV-x dans le dossier du rapport
@@ -339,10 +356,30 @@ while True:
             API_Redaction_En_Cours.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
 
             printc(f'[yellow]Attente de demande d\'écriture...\n')
+        ##———————————————————————————————————————————————————————————————##
+        ## Test de connection entre le PC et l'IHM
         elif Get_Ping:
             time.sleep(1)
             IHM_Test_Ping.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
             printc(f"Ping IHM valide\n")
+        ##———————————————————————————————————————————————————————————————##
+        ## Capture automatique de l'écran du Picoscope lors de l'essai de synchro-résolveur/capteur de vitesse
+        elif Get_Screenshot_Picoscope:
+            nom_fenetre = "Picoscope 7 T&M"
+            chemin_capture = f'{credentials["root"]}\\Picoscope_Temp'
+            os.makedirs(chemin_capture, exist_ok=True)
+            nom_capture = 'capture_Picoscope.tiff'
+            path_capture_temp = os.path.join(chemin_capture, nom_capture)
+            try:
+                # Capture d'écran de la fenêtre du Picoscope
+                screenshot_fenetre(nom_fenetre, path_capture_temp)
+                printc(f"Capture d'écran du Picoscope stockée\nChemin : {path_capture_temp}\n")
+                # Mémorisation qu'une capture a été faite
+                picoscope_capture = True
+            except RuntimeError as e:
+                printc(f"[yellow]{e}")
+                printc(f"[yellow]Le programme continue sans capture...\n")
+            API_Capture_Pico.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
         else:
             time.sleep(1)
     except KeyboardInterrupt:
@@ -355,7 +392,7 @@ while True:
         # Reconnexion complète
         client = reconnexion_client(client, credentials)
         # Réinitialisation des nodes avec le nouveau client
-        (API_Lecture, API_Lecture_Mem, API_Redaction_En_Cours, IHM_Test_Ping, IHM_Valeur_Tot, IHM_Valeur_Actu) = init_nodes(client)
+        (API_Lecture, API_Lecture_Mem, API_Redaction_En_Cours, API_Capture_Pico, IHM_Test_Ping, IHM_Valeur_Tot, IHM_Valeur_Actu) = init_nodes(client)
         printc(f'[yellow]Attente de demande d\'écriture...\n')
 
 ##————————————————————————————————————————————————————————————————————————————##

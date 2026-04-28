@@ -4,7 +4,7 @@ Get values from an OPCUA server  and convert these to a PDF file
 ## Run
 The following steps are used to run the program with **Windows 10 or 11** command bash
 
-### Install the lastest python version
+### Install the lastest Python version
 - Install the last version on [Python website](https://www.python.org/downloads/)
 - Run the installer 
 - Check the correct installation by looking at the installed version
@@ -38,6 +38,11 @@ C:\Users\*USERNAME*\AppData\Local\Programs\Python\Python313\Lib\site-packages\fp
 - For the CSV generation
 ```bash
 py -m pip install pandas
+```
+
+- For the automatic screenshot of a specific window
+```bash
+py -m pip install pywin32 pillow
 ```
 
 ### Complete the configuration file
