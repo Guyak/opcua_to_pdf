@@ -3,7 +3,6 @@ import win32ui
 import win32con
 from PIL import Image
 import os
-import time
 
 def find_window_by_title(keyword):
     result = []
@@ -12,13 +11,13 @@ def find_window_by_title(keyword):
         if win32gui.IsWindowVisible(hwnd):
             title = win32gui.GetWindowText(hwnd)
             if keyword.lower() in title.lower():
-                # filtrage du nom des fenêtres pour trouver la bonne à ouvrir
+                # Filtrage du nom des fenêtres pour trouver la bonne à ouvrir
                 result.append(hwnd)
     win32gui.EnumWindows(enum_handler, None)
     return result[0] if result else None
 
 def screenshot_fenetre(titre_fenetre, chemin_temp):
-    # Recherche de la fenêtre du Picoscope
+    # Recherche de la fenêtre
     hwnd = find_window_by_title(titre_fenetre)
     if hwnd is None:
         raise RuntimeError(f"Aucune fenêtre contenant '{titre_fenetre}' n'a été trouvée")
