@@ -5,14 +5,14 @@ import time
 def dict_to_csv(csv_chemin, dictionnaire, exclusions, sep=";", encoding="utf-8"):
     csv_fichier = Path(csv_chemin)
     date_str = time.strftime("%Y-%m-%d")
-    heure_str = time.strftime("%H-%M-%S")
+    heure_str = time.strftime("%H:%M:%S")
 
     ## Colonnes fixes en tête
     col_fixes = ["Date", "Heure"] + exclusions
 
     ## Lecture du CSV s'il existe, sinon DataFrame vide
     if csv_fichier.exists():
-        df = pd.read_csv(csv_fichier, sep=sep, encoding=encoding)
+        df = pd.read_csv(csv_fichier, sep=sep, encoding=encoding, dtype={"Rapport.GEN_Symbole_Specimen":str})
     else:
         df = pd.DataFrame(columns=col_fixes)
 
