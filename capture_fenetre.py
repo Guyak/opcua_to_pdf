@@ -43,7 +43,7 @@ def screenshot_fenetre(titre_fenetre, chemin_temp):
     bmpinfo = saveBitmap.GetInfo()
     bmpstr = saveBitmap.GetBitmapBits(True)
     image = Image.frombuffer('RGB', (bmpinfo['bmWidth'], bmpinfo['bmHeight']), bmpstr, 'raw', 'BGRX', 0, 1)
-    image.save(chemin_temp, format="TIFF")
+    image.save(chemin_temp)
 
     # Nettoyage
     win32gui.DeleteObject(saveBitmap.GetHandle())

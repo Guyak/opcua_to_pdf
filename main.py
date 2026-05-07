@@ -13,7 +13,7 @@ import sys
 import os
 import shutil
 
-##————————————————————————————————————————————————————————————————————————————##
+##—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————##
 ## Extraction des fichiers JSON de configuration
 config_file = resource_path("_config.json")
 with open(config_file) as file:
@@ -32,7 +32,7 @@ with open(encrypt_file, "r") as file:
     cfg = j_load(file)
 password = cipher.decrypt(cfg["password_enc"].encode()).decode()
 
-##————————————————————————————————————————————————————————————————————————————##
+##—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————##
 ## Creation des dictionnaires
 class Dictionnaire:
     # Cette classe crée un raccourci pour avoir une structure de code similaire au programme automate
@@ -59,7 +59,7 @@ recette = Dictionnaire(dict.fromkeys(recette_liste, -1))
 rapport_liste = listes_param["rapport_liste"]
 rapport = Dictionnaire(dict.fromkeys(rapport_liste, -1))
 
-##————————————————————————————————————————————————————————————————————————————##
+##—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————##
 ## Mise en place du client OPCUA
 def creer_client(credentials, password):
     url = credentials["serveur_url"]
@@ -124,7 +124,7 @@ def init_nodes(client):
 client, url = creer_client(credentials, password)
 client = validation_connexion(client)
 
-##————————————————————————————————————————————————————————————————————————————##
+##—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————##
 ## Lecture/Ecriture des valeurs du serveur et génération de rapport
 (API_Lecture, API_Lecture_Mem, API_Redaction_En_Cours, API_Capture_Pico, IHM_Test_Ping, IHM_Valeur_Tot, IHM_Valeur_Actu) = init_nodes(client)
 picoscope_capture = False
@@ -147,7 +147,7 @@ while True:
                 printc(f'[bright_magenta]--- Début de la rédaction du rapport (mode Essai Mémorisé) ---\n')
             API_Redaction_En_Cours.set_value(ua.DataValue(ua.Variant(True, ua.VariantType.Boolean)))
 
-            ##———————————————————————————————————————————————————————————————##
+            ##—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————##
             ## Debug : filtre des valeurs à lire pour accélérer le programme
             read_full = True
             if read_full:
@@ -160,7 +160,7 @@ while True:
                 rapport_filtre = [item for item in rapport_liste if ("GEN" in item) or ("VIBR" in item)]
             IHM_Valeur_Tot.set_value(ua.DataValue(ua.Variant(len(recette_filtre)+len(rapport_filtre), ua.VariantType.UInt16)))
 
-            ##———————————————————————————————————————————————————————————————##
+            ##—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————##
 
             ## Récupération des valeurs
             # Recette
@@ -356,19 +356,19 @@ while True:
             API_Redaction_En_Cours.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
 
             printc(f'[yellow]Attente de demande d\'écriture...\n')
-        ##———————————————————————————————————————————————————————————————##
+        ##—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————##
         ## Test de connection entre le PC et l'IHM
         elif Get_Ping:
             time.sleep(1)
             IHM_Test_Ping.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
             printc(f"Ping IHM valide\n")
-        ##———————————————————————————————————————————————————————————————##
+        ##—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————##
         ## Capture automatique de l'écran du Picoscope lors de l'essai de synchro-résolveur/capteur de vitesse
         elif Get_Screenshot_Picoscope:
             nom_fenetre = "Picoscope 7 T&M"
             chemin_capture = f'{credentials["root"]}\\Picoscope_Temp'
             os.makedirs(chemin_capture, exist_ok=True)
-            nom_capture = 'capture_Picoscope.tiff'
+            nom_capture = 'capture_Picoscope.png'
             path_capture_temp = os.path.join(chemin_capture, nom_capture)
             try:
                 # Capture d'écran de la fenêtre du Picoscope
@@ -395,7 +395,7 @@ while True:
         (API_Lecture, API_Lecture_Mem, API_Redaction_En_Cours, API_Capture_Pico, IHM_Test_Ping, IHM_Valeur_Tot, IHM_Valeur_Actu) = init_nodes(client)
         printc(f'[yellow]Attente de demande d\'écriture...\n')
 
-##————————————————————————————————————————————————————————————————————————————##
+##—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————##
 ## Déconnexion du serveur
 try:
     client.disconnect()

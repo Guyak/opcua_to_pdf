@@ -7,12 +7,22 @@ def dict_to_csv(csv_chemin, dictionnaire, exclusions, sep=";", encoding="utf-8")
     date_str = time.strftime("%Y-%m-%d")
     heure_str = time.strftime("%H:%M:%S")
 
+    ## Valeurs à lire en format String pour ne pas avoir de problème de recopie
+    CLES_STRING = ["Date",
+                    "Heure",
+                    "Rapport.GEN_Type_Specimen",
+                    "Rapport.GEN_Ref_Specimen",
+                    "Rapport.GEN_Symbole_Specimen",
+                    "Rapport.GEN_Num_Serie",
+                    "Rapport.GEN_Nom_Operateur"
+                    ]
+
     ## Colonnes fixes en tête
     col_fixes = ["Date", "Heure"] + exclusions
 
     ## Lecture du CSV s'il existe, sinon DataFrame vide
     if csv_fichier.exists():
-        df = pd.read_csv(csv_fichier, sep=sep, encoding=encoding, dtype={"Rapport.GEN_Symbole_Specimen":str})
+        df = pd.read_csv(csv_fichier, sep=sep, encoding=encoding, dtype={element : str for element in CLES_STRING})
     else:
         df = pd.DataFrame(columns=col_fixes)
 
