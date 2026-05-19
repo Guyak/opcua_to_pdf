@@ -174,26 +174,39 @@ while True:
             IHM_Valeur_Tot.set_value(ua.DataValue(ua.Variant(len(recette_filtre)+len(rapport_filtre), ua.VariantType.UInt16)))
 
             ##—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————##
-
             ## Récupération des valeurs
+            BATCH_SIZE = 30
+            parcours_actu = 0
             # Recette
             printc(f'[bright_cyan]Récupération des paramètres de recette...')
-            parcours_actu = 0
-            for idx,i in enumerate(recette_filtre, start=1):
-                print(f"{idx}/{len(recette_filtre)}", end="\r")
-                valeur = appliquer_scale(i, client.get_node(f'ns=2;s=API_425056.Tags.Recette.{i}').get_value(), liste_scale)
-                setattr(recette, i, valeur)
-                parcours_actu += 1
-                IHM_Valeur_Actu.set_value(ua.DataValue(ua.Variant(int(parcours_actu), ua.VariantType.UInt16)))
+            nodes = [client.get_node(f'ns=2;s=API_425056.Tags.Recette.{i}') for i in recette_filtre] # Création simultanée de tous les nodes et récupération des valeurs
+            total = len(nodes)
+            for start in range(0, total, BATCH_SIZE):
+                end = start + BATCH_SIZE
+                valeurs_batch = client.get_values(nodes[start:end])
+                cles_batch = recette_filtre[start:end]
+                for idx, (cle, valeur) in enumerate(zip(cles_batch, valeurs_batch), start=start+1):
+                    print(f"{idx}/{len(recette_filtre)}", end="\r")
+                    valeur = appliquer_scale(cle, valeur, liste_scale)
+                    setattr(recette, cle, valeur)
+                    parcours_actu += 1
+                    IHM_Valeur_Actu.set_value(ua.DataValue(ua.Variant(int(parcours_actu), ua.VariantType.UInt16)))
             printc(f'[green]OK     ')
+
             # Résultats
             printc(f'[bright_cyan]Récupération des résultats des essais...')
-            for idx,i in enumerate(rapport_filtre, start=1):
-                print(f"{idx}/{len(rapport_filtre)}", end="\r")
-                valeur = appliquer_scale(i, client.get_node(f'ns=2;s=API_425056.Tags.Rapport.{i}').get_value(), liste_scale)
-                setattr(rapport, i, valeur)
-                parcours_actu += 1
-                IHM_Valeur_Actu.set_value(ua.DataValue(ua.Variant(parcours_actu, ua.VariantType.UInt16)))
+            nodes = [client.get_node(f'ns=2;s=API_425056.Tags.Rapport.{i}') for i in rapport_filtre] # Création simultanée de tous les nodes et récupération des valeurs
+            total = len(nodes)
+            for start in range(0, total, BATCH_SIZE):
+                end = start + BATCH_SIZE
+                valeurs_batch = client.get_values(nodes[start:end])
+                cles_batch = rapport_filtre[start:end]
+                for idx, (cle, valeur) in enumerate(zip(cles_batch, valeurs_batch), start=start+1):
+                    print(f"{idx}/{len(rapport_filtre)}", end="\r")
+                    valeur = appliquer_scale(cle, valeur, liste_scale)
+                    setattr(rapport, cle, valeur)
+                    parcours_actu += 1
+                    IHM_Valeur_Actu.set_value(ua.DataValue(ua.Variant(parcours_actu, ua.VariantType.UInt16)))
             printc(f'[green]OK     \n')
 
             ## Création du fichier PDF
@@ -369,6 +382,7 @@ while True:
             API_Lecture.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
             API_Lecture_Mem.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
             API_Redaction_En_Cours.set_value(ua.DataValue(ua.Variant(False, ua.VariantType.Boolean)))
+            IHM_Valeur_Actu.set_value(ua.DataValue(ua.Variant(0, ua.VariantType.UInt16)))
 
             printc(f'[yellow]Attente de demande d\'écriture...\n')
         ##—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————##
