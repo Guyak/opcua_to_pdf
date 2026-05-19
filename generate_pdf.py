@@ -139,7 +139,7 @@ def print_RIF(pdf, idx, res_min, res_max, res_UV, res_VW, res_UW, res_ok, ecart_
     ## Préparation des données
     # Création du tableau de valeurs
     data = []
-    essai = ["U - V", str(res_UV/100), f"{res_min/100} / {res_max/100}"]
+    essai = ["U - V", str(res_UV), f"{res_min} / {res_max}"]
     if res_ok:
         essai.append("☑")
         essai.append("☐")
@@ -147,9 +147,9 @@ def print_RIF(pdf, idx, res_min, res_max, res_UV, res_VW, res_UW, res_ok, ecart_
         essai.append("☐")
         essai.append("☑")
     data.append(essai)
-    essai = ["V - W", str(res_VW/100), f"Ecart max. (%)", "", ""]
+    essai = ["V - W", str(res_VW), f"Ecart max. (%)", "", ""]
     data.append(essai)
-    essai = ["U - W", str(res_UW/100), f"{ecart/100} < {ecart_toler/100}"]
+    essai = ["U - W", str(res_UW), f"{ecart} < {ecart_toler}"]
     if ecart_ok:
         essai.append("☑")
         essai.append("☐")
@@ -194,7 +194,7 @@ def print_ISOL(pdf, idx, bobinage_min, res_bobinage, bobinage_ok, paliers_min, r
     ## Préparation des données
     # Création du tableau de valeurs
     data = []
-    essai = ["Bobinage stator", f"{res_bobinage/1000} GΩ", f"{bobinage_min/1000} GΩ"]
+    essai = ["Bobinage stator", f"{res_bobinage} GΩ", f"{bobinage_min} GΩ"]
     if bobinage_ok:
         essai.append("☑")
         essai.append("☐")
@@ -202,7 +202,7 @@ def print_ISOL(pdf, idx, bobinage_min, res_bobinage, bobinage_ok, paliers_min, r
         essai.append("☐")
         essai.append("☑")
     data.append(essai)
-    essai = ["Paliers", f"{res_paliers/1000} GΩ", f"{paliers_min/1000} GΩ"]
+    essai = ["Paliers", f"{res_paliers} GΩ", f"{paliers_min} GΩ"]
     if paliers_ok:
         essai.append("☑")
         essai.append("☐")
@@ -255,12 +255,12 @@ def print_TEMP(pdf, idx, type_specimen, temp_toler, temp_ambiante, temp_specimen
     data.append(titres)
 
     # Mise en place des mesures
-    essai = [str(temp_ambiante/10), str(temp_specimen_1/10)]
+    essai = [str(temp_ambiante), str(temp_specimen_1)]
     if type_specimen == "Regio2N":
-        essai.append(str(temp_specimen_2/10))
+        essai.append(str(temp_specimen_2))
     else:
         essai.append(" ")
-    essai.append(str(temp_toler/10))
+    essai.append(str(temp_toler))
     if go_nogo:
         essai.append("☑")
         essai.append("☐")
@@ -450,8 +450,8 @@ def print_VIDE(pdf, idx, type_specimen, vitesse, tension_accep, hyst, tension, g
     tension_min = []
     tension_max = []
     for idx in range(3):
-        tension_min.append(round((tension_accep[idx]-hyst[idx])/10, 1))
-        tension_max.append(round((tension_accep[idx]+hyst[idx])/10, 1))
+        tension_min.append(round((tension_accep[idx]-hyst[idx]), 1))
+        tension_max.append(round((tension_accep[idx]+hyst[idx]), 1))
     
     # Préparation des données pour chaque vitesse d'essai
     data = []
@@ -459,7 +459,7 @@ def print_VIDE(pdf, idx, type_specimen, vitesse, tension_accep, hyst, tension, g
         essai = []
         essai.append(str(vitesse[idx]))
         essai.append(str(tension_min[idx]))
-        essai.append(str(tension[idx]/10))
+        essai.append(str(tension[idx]))
         essai.append(str(tension_max[idx]))
         if go_nogo[idx]:
             essai.append("☑")
@@ -614,8 +614,8 @@ def print_SYNCHRO(pdf, idx, type_specimen, vitesse, vitesse_toler, sequence_ok, 
         pdf.cell(col_larg, hauteur_multi, "Delta T (ms)", border=1, align='C')
         pdf.multi_cell(col_larg, hauteur_multi/2, f"Tolérances\nMin/Max", border=1, align='C', new_x="LMARGIN")
         # Mesure et valeurs min/max
-        pdf.cell(col_larg, hauteur_ligne, str(delta_t/100), border=1, align='C')
-        pdf.cell(col_larg, hauteur_ligne, str(f"{delta_t_min/100} / {delta_t_max/100}"), border=1, align='C')
+        pdf.cell(col_larg, hauteur_ligne, str(delta_t), border=1, align='C')
+        pdf.cell(col_larg, hauteur_ligne, str(f"{delta_t_min} / {delta_t_max}"), border=1, align='C')
         # Statut Go / NoGo
         pdf.set_x(go_nogo_x)
         if delta_t_ok:
@@ -646,7 +646,7 @@ def print_SURVIT(pdf, idx, vitesse, duree_essai, vitesse_arret, vibration, vibra
         pdf.print_go_nogo("☑", "☐", hauteur_texte)
     else:
         pdf.print_go_nogo("☐", "☑", hauteur_texte)
-    pdf.cell(0, hauteur_texte, f"Vibration maximale mesurée lors de l'essai :           {vibration/100}     <     {vibration_toler/100} mm/s", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, hauteur_texte, f"Vibration maximale mesurée lors de l'essai :           {vibration}     <     {vibration_toler} mm/s", border=0, align='L', new_x="LMARGIN", new_y="NEXT")
     if nogo:
         pdf.set_text_color(255,0,0)
         pdf.cell(0, hauteur_texte, f"Essai invalide, arrêt prématuré. Vitesse atteinte avant arrêt : {vitesse_arret} tr/min", border=0, align='L')
@@ -706,16 +706,16 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, V_toler_CC, V_toler_COC, V_CC, 
         essai = []
         essai.append(str(vitesse[idx]))
         essai.append("V")
-        essai.append(str(V_CC[idx]/100))
+        essai.append(str(V_CC[idx]))
         # Si paramètre limitant = 0 => pas d'affichage (car pas de vérification)
         if V_toler_CC[idx] != 0:
-            essai.append(str(V_toler_CC[idx]/100))
+            essai.append(str(V_toler_CC[idx]))
         else:
             essai.append("")
-        essai.append(str(V_COC[idx]/100))
+        essai.append(str(V_COC[idx]))
         # Si paramètre limitant = 0 => pas d'affichage (car pas de vérification)
         if V_toler_COC[idx] != 0:
-            essai.append(str(V_toler_COC[idx]/100))
+            essai.append(str(V_toler_COC[idx]))
         else:
             essai.append("")
         if (V_toler_CC[idx] != 0) or (V_toler_COC[idx] != 0): # Si deux paramètres limitants à 0 => pas d'affichage des statuts Go/NoGo
@@ -734,16 +734,16 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, V_toler_CC, V_toler_COC, V_CC, 
         essai = []
         essai.append("") # Cellule vide pour décalage de la colonne vitesse
         essai.append("AHF")
-        essai.append(str(AHF_CC[idx]/100))
+        essai.append(str(AHF_CC[idx]))
         # Si paramètre limitant = 0 => pas d'affichage (car pas de vérification)
         if AHF_toler_CC[idx] != 0:
-            essai.append(str(AHF_toler_CC[idx]/100))
+            essai.append(str(AHF_toler_CC[idx]))
         else:
             essai.append("")
-        essai.append(str(AHF_COC[idx]/100))
+        essai.append(str(AHF_COC[idx]))
         # Si paramètre limitant = 0 => pas d'affichage (car pas de vérification)
         if AHF_toler_COC[idx] != 0:
-            essai.append(str(AHF_toler_COC[idx]/100))
+            essai.append(str(AHF_toler_COC[idx]))
         else:
             essai.append("")
         if (AHF_toler_CC[idx] != 0) or (AHF_toler_COC[idx] != 0): # Si deux paramètres limitants à 0 => pas d'affichage des statuts Go/NoGo
@@ -762,16 +762,16 @@ def print_VIBR(pdf, idx, type_specimen, vitesse, V_toler_CC, V_toler_COC, V_CC, 
         essai = []
         essai.append("") # Cellule vide pour décalage de la colonne vitesse
         essai.append("RL")
-        essai.append(str(RL_CC[idx]/100))
+        essai.append(str(RL_CC[idx]))
         # Si paramètre limitant = 0 => pas d'affichage (car pas de vérification)
         if RL_toler_CC[idx] != 0:
-            essai.append(str(RL_toler_CC[idx]/100))
+            essai.append(str(RL_toler_CC[idx]))
         else:
             essai.append("")
-        essai.append(str(RL_COC[idx]/100))
+        essai.append(str(RL_COC[idx]))
         # Si paramètre limitant = 0 => pas d'affichage (car pas de vérification)
         if RL_toler_COC[idx] != 0:
-            essai.append(str(RL_toler_COC[idx]/100))
+            essai.append(str(RL_toler_COC[idx]))
         else:
             essai.append("")
         if (RL_toler_CC[idx] != 0) or (RL_toler_COC[idx] != 0): # Si deux paramètres limitants à 0 => pas d'affichage des statuts Go/NoGo

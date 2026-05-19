@@ -22,6 +22,13 @@ config_file = resource_path("_config_listes.json")
 with open(config_file) as file:
     listes_param = j_load(file)
 
+## Création d'un dictionnaire répertoriant les mises à l'échelle à appliquer
+liste_scale = {}
+for div_str, cles in listes_param["transformations"].items():
+    div = float(div_str)
+    for cle in cles:
+        liste_scale[cle] = div
+
 ## Chargement et décryptage du MDP
 encrypt_file = resource_path("_key.bin")
 with open(encrypt_file, "rb") as file:
@@ -53,6 +60,12 @@ class Dictionnaire:
             raise AttributeError(f"Impossible de créer un nouvel alias : {name}")
     def __repr__(self):
         return repr(self._data)
+
+## Fonction permettant d'appliquer les mises à l'échelle des différentes données (avoir les bonnes unités dans le CSV et le PV)
+def appliquer_scale(cle, valeur_init, transformations_dict):
+    if cle in transformations_dict and valeur_init is not None:
+        return valeur_init / transformations_dict[cle]
+    return valeur_init
 
 recette_liste = listes_param["recette_liste"]
 recette = Dictionnaire(dict.fromkeys(recette_liste, -1))
@@ -168,7 +181,8 @@ while True:
             parcours_actu = 0
             for idx,i in enumerate(recette_filtre, start=1):
                 print(f"{idx}/{len(recette_filtre)}", end="\r")
-                setattr(recette, i, client.get_node(f'ns=2;s=API_425056.Tags.Recette.{i}').get_value())
+                valeur = appliquer_scale(i, client.get_node(f'ns=2;s=API_425056.Tags.Recette.{i}').get_value(), liste_scale)
+                setattr(recette, i, valeur)
                 parcours_actu += 1
                 IHM_Valeur_Actu.set_value(ua.DataValue(ua.Variant(int(parcours_actu), ua.VariantType.UInt16)))
             printc(f'[green]OK     ')
@@ -176,7 +190,8 @@ while True:
             printc(f'[bright_cyan]Récupération des résultats des essais...')
             for idx,i in enumerate(rapport_filtre, start=1):
                 print(f"{idx}/{len(rapport_filtre)}", end="\r")
-                setattr(rapport, i, client.get_node(f'ns=2;s=API_425056.Tags.Rapport.{i}').get_value())
+                valeur = appliquer_scale(i, client.get_node(f'ns=2;s=API_425056.Tags.Rapport.{i}').get_value(), liste_scale)
+                setattr(rapport, i, valeur)
                 parcours_actu += 1
                 IHM_Valeur_Actu.set_value(ua.DataValue(ua.Variant(parcours_actu, ua.VariantType.UInt16)))
             printc(f'[green]OK     \n')
